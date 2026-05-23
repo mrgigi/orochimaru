@@ -2414,7 +2414,20 @@ body {
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  overflow-y: auto;
+  padding: 20px 10px;
+  -webkit-overflow-scrolling: touch;
   animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@media (max-width: 768px), (max-height: 850px) {
+  .platform-modal-overlay {
+    align-items: flex-start;
+  }
+  .platform-modal-content {
+    margin-top: 20px;
+    margin-bottom: 20px;
+  }
 }
 
 .platform-modal-content {
