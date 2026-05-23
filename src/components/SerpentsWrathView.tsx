@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { 
-  Play, 
   Skull, 
   Swords, 
   Trophy, 
@@ -13,7 +12,7 @@ import {
 import { GameEngine } from '../game/sw/GameEngine';
 import { GameState } from '../game/sw/types';
 import { synth } from '../audio/SynthManager';
-import serpentsBanner from '../assets/serpents_wrath_banner.png';
+import orochimaruFace from '../assets/orochimaru_face.png';
 import { useGameStore } from '../hooks/useGameStore';
 
 type ScreenState = 'start' | 'playing' | 'gameover' | 'victory';
@@ -30,15 +29,7 @@ const ATTACK_DEFS_SW = {
   edo_tensei: { key: 'Space', label: 'Edo Tensei', color: '#ff0066', cooldown: 5000 },
 };
 
-const WAVE_DEFS_SW = [
-  { label: 'Leaf Genin' },
-  { label: 'Chunin Assault' },
-  { label: 'ANBU Black Ops' },
-  { label: 'Jonin Strike' },
-  { label: 'Elite Guard' },
-  { label: 'Full Assault' },
-  { label: 'Shadow Kage (Boss)' },
-];
+
 
 export function SerpentsWrathView({ onExit, onGoToLeaderboard }: SerpentsWrathViewProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -77,6 +68,32 @@ export function SerpentsWrathView({ onExit, onGoToLeaderboard }: SerpentsWrathVi
   const [finalScore, setFinalScore] = useState(0);
   const [finalKills, setFinalKills] = useState(0);
   const [finalWaves, setFinalWaves] = useState(0);
+  const [topScores, setTopScores] = useState<{name: string, score: number, waves: number}[]>([]);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('orochimaru_leaderboard');
+      let list = saved ? JSON.parse(saved) : [];
+      list.sort((a: any, b: any) => b.score - a.score);
+      if (list.length === 0) {
+        list = [
+          { name: 'SerpentKing', score: 8500, waves: 7 },
+          { name: 'NinjaSlayer', score: 7200, waves: 7 },
+          { name: 'SnakeMaster', score: 6100, waves: 6 },
+          { name: 'ShadowViper', score: 5400, waves: 5 },
+        ];
+      }
+      setTopScores(list.slice(0, 4));
+    } catch {
+      setTopScores([
+        { name: 'SerpentKing', score: 8500, waves: 7 },
+        { name: 'NinjaSlayer', score: 7200, waves: 7 },
+        { name: 'SnakeMaster', score: 6100, waves: 6 },
+        { name: 'ShadowViper', score: 5400, waves: 5 },
+      ]);
+    }
+  }, [screen]);
+
   const [canvasDim, setCanvasDim] = useState({ w: 360, h: 500 });
   const [playerName, setPlayerName] = useState(() => {
     return localStorage.getItem('orochimaru_player_name') || 'Shinobi_' + Math.floor(Math.random() * 900 + 100);
@@ -327,49 +344,68 @@ export function SerpentsWrathView({ onExit, onGoToLeaderboard }: SerpentsWrathVi
       {/* ── START SCREEN ─────────────────────────────────── */}
       {screen === 'start' && (
         <div className="sw-screen start-screen">
-          <div className="sw-banner-wrap">
-            <img src={serpentsBanner} alt="Serpent Fury" className="sw-banner-img" />
-            <div className="sw-banner-overlay" />
-          </div>
-
-          <div className="sw-start-content">
-            <div className="sw-logo-block">
-              <span className="sw-token-pill">TOKEN: OROCHIMARU</span>
-              <h1 className="sw-title">SERPENT FURY</h1>
-              <p className="sw-tagline">"The Forbidden Jutsu of DeFi"</p>
+          <div className="sw-start-content-new">
+            {/* Circular Avatar */}
+            <div className="sw-start-avatar-wrap">
+              <img src={orochimaruFace} alt="Orochimaru" className="sw-start-avatar" />
+              <div className="sw-start-avatar-glow"></div>
             </div>
 
-            <div className="sw-wave-preview">
-              {WAVE_DEFS_SW.map((w, i) => (
-                <div key={i} className="sw-wave-chip">
-                  <span className="sw-wave-num">{i + 1}</span>
-                  <span className="sw-wave-name">{w.label}</span>
-                </div>
-              ))}
-            </div>
+            {/* Title & Subtitle */}
+            <h1 className="sw-start-title">SERPENT FURY</h1>
+            <p className="sw-start-subtitle">UNLEASH THE IMMORTAL</p>
 
-            <div className="sw-controls-grid">
-              <div className="sw-ctrl-col">
-                <h4>MOVEMENT</h4>
-                <p>WASD / Arrow Keys</p>
-                <p>2D Free Roam in Lab</p>
+            {/* Pill Box */}
+            <div className="sw-start-pill-box">
+              <div className="sw-start-pill-header">
+                <span>🐍 Powered by </span>
+                <a href="https://orochimaru.live" target="_blank" rel="noopener noreferrer" className="sw-start-pill-link">
+                  $orochimaru.live
+                </a>
               </div>
-              <div className="sw-ctrl-col">
-                <h4>ATTACKS</h4>
-                {attackTypes.map(t => (
-                  <p key={t} style={{ color: ATTACK_DEFS_SW[t].color }}>
-                    [{ATTACK_DEFS_SW[t].key}] {ATTACK_DEFS_SW[t].label}
-                  </p>
-                ))}
-              </div>
+              <p className="sw-start-pill-desc">The Immortal Serpent of DeFi — Shedding Limits, Gaining Power</p>
             </div>
 
-            <button onClick={startGame} className="sw-start-btn">
-              <Play size={20} />
-              <span>BEGIN THE ASSAULT</span>
+            {/* Enter Arena Button */}
+            <button onClick={startGame} className="sw-start-arena-btn">
+              <span>⚔️ ENTER THE ARENA</span>
             </button>
 
-            <p className="sw-sub-tagline">"Immortality awaits those who hold OROCHIMARU"</p>
+            {/* Instructions text */}
+            <p className="sw-start-instructions">
+              WASD/Arrows to move | 1 2 3 4 or Space to attack<br />
+              Survive 7 waves + defeat the <strong>BOSS</strong> to claim victory
+            </p>
+
+            {/* High Score */}
+            <div className="sw-start-highscore">
+              🏆 High Score: {store.combatHighScore.toLocaleString()}
+            </div>
+
+            {/* Global Leaderboard Mini Table */}
+            <div className="sw-start-leaderboard">
+              <h3 className="sw-start-leaderboard-title">🏆 GLOBAL LEADERBOARD</h3>
+              <table className="sw-start-leaderboard-table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>PLAYER</th>
+                    <th>SCORE</th>
+                    <th>WAVE</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {topScores.map((entry, idx) => (
+                    <tr key={idx}>
+                      <td>{idx + 1}</td>
+                      <td>{entry.name}</td>
+                      <td>{entry.score.toLocaleString()}</td>
+                      <td>{entry.waves}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}

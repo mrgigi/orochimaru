@@ -3556,4 +3556,277 @@ body {
   }
 }
 
+/* ── New Immersive Start Screen Layout (Matching Standalone) ── */
+.sw-start-content-new {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  gap: 15px;
+  padding: 20px 15px;
+  text-align: center;
+}
+
+.sw-start-avatar-wrap {
+  position: relative;
+  width: 90px;
+  height: 90px;
+  margin-bottom: 5px;
+  flex-shrink: 0;
+}
+
+.sw-start-avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2.5px solid #00e676;
+  box-shadow: 0 0 20px rgba(0, 230, 118, 0.6);
+  background: #0f0b24;
+}
+
+.sw-start-avatar-glow {
+  position: absolute;
+  inset: -5px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(0, 230, 118, 0.4) 0%, transparent 70%);
+  z-index: -1;
+  animation: pulseAvatar 2s infinite ease-in-out;
+}
+
+@keyframes pulseAvatar {
+  0%, 100% { transform: scale(1); opacity: 0.6; }
+  50% { transform: scale(1.1); opacity: 0.9; }
+}
+
+.sw-start-title {
+  font-family: var(--font-heading);
+  font-size: 2.2rem;
+  font-weight: 900;
+  letter-spacing: 4px;
+  background: linear-gradient(135deg, #00e676 30%, #bd00ff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin: 0;
+  text-shadow: 0 0 35px rgba(0, 230, 118, 0.25);
+}
+
+.sw-start-subtitle {
+  font-family: var(--font-heading);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 4px;
+  color: #00e676;
+  margin: -8px 0 5px;
+  text-shadow: 0 0 10px rgba(0, 230, 118, 0.5);
+}
+
+/* Pill Box */
+.sw-start-pill-box {
+  background: rgba(18, 12, 36, 0.65);
+  border: 1px solid rgba(0, 230, 118, 0.25);
+  border-radius: 12px;
+  padding: 10px 16px;
+  width: 100%;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.sw-start-pill-header {
+  font-family: var(--font-heading);
+  font-size: 0.8rem;
+  font-weight: 900;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.sw-start-pill-link {
+  color: #00e676;
+  text-decoration: underline;
+  font-weight: 900;
+  transition: all 0.2s;
+}
+
+.sw-start-pill-link:hover {
+  text-shadow: 0 0 8px #00e676;
+}
+
+.sw-start-pill-desc {
+  font-size: 0.65rem;
+  color: var(--text-grey);
+  margin-top: 4px;
+  line-height: 1.3;
+}
+
+/* Arena Launch Button */
+.sw-start-arena-btn {
+  background: linear-gradient(135deg, #a855f7 0%, #00e676 100%);
+  color: #fff;
+  border: none;
+  font-family: var(--font-heading);
+  font-weight: 900;
+  font-size: 1.1rem;
+  letter-spacing: 2px;
+  padding: 12px 32px;
+  cursor: pointer;
+  border-radius: 8px;
+  box-shadow: 0 0 25px rgba(0, 230, 118, 0.5), 0 4px 15px rgba(0, 0, 0, 0.4);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 100%;
+  max-width: 320px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sw-start-arena-btn:hover {
+  transform: scale(1.03);
+  box-shadow: 0 0 35px rgba(0, 230, 118, 0.8);
+}
+
+.sw-start-arena-btn:active {
+  transform: scale(0.97);
+}
+
+/* Instructions */
+.sw-start-instructions {
+  font-size: 0.72rem;
+  color: var(--text-grey);
+  line-height: 1.5;
+  margin: 2px 0;
+}
+
+.sw-start-instructions strong {
+  color: #ef4444;
+}
+
+/* High Score */
+.sw-start-highscore {
+  font-family: var(--font-heading);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #eab308;
+  text-shadow: 0 0 10px rgba(234, 179, 8, 0.4);
+  margin-top: 2px;
+}
+
+/* Leaderboard Table styling */
+.sw-start-leaderboard {
+  width: 100%;
+  background: rgba(18, 12, 36, 0.55);
+  border: 1px solid rgba(189, 0, 255, 0.18);
+  border-radius: 10px;
+  padding: 12px 14px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+}
+
+.sw-start-leaderboard-title {
+  font-family: var(--font-heading);
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 1.5px;
+  color: #eab308;
+  margin-bottom: 8px;
+  text-shadow: 0 0 8px rgba(234, 179, 8, 0.3);
+}
+
+.sw-start-leaderboard-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.7rem;
+}
+
+.sw-start-leaderboard-table th {
+  border-bottom: 1px solid rgba(189, 0, 255, 0.25);
+  padding: 4px 6px;
+  color: var(--text-grey);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.sw-start-leaderboard-table td {
+  padding: 5px 6px;
+  color: var(--text-pale);
+}
+
+.sw-start-leaderboard-table tbody tr {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.sw-start-leaderboard-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.sw-start-leaderboard-table tbody tr:nth-child(odd) {
+  background: rgba(255, 255, 255, 0.01);
+}
+
+.sw-start-leaderboard-table tbody tr:first-child td {
+  color: #eab308;
+  font-weight: 700;
+}
+
+/* Mobile adjustments */
+@media (max-width: 600px), (max-height: 850px) {
+  .sw-start-content-new {
+    gap: 8px !important;
+    padding: 10px 10px !important;
+  }
+  .sw-start-avatar-wrap {
+    width: 60px !important;
+    height: 60px !important;
+  }
+  .sw-start-title {
+    font-size: 1.6rem !important;
+    letter-spacing: 2px !important;
+  }
+  .sw-start-subtitle {
+    font-size: 0.6rem !important;
+    letter-spacing: 2px !important;
+    margin: -6px 0 2px !important;
+  }
+  .sw-start-pill-box {
+    padding: 6px 12px !important;
+  }
+  .sw-start-pill-header {
+    font-size: 0.72rem !important;
+  }
+  .sw-start-pill-desc {
+    font-size: 0.6rem !important;
+    margin-top: 2px !important;
+  }
+  .sw-start-arena-btn {
+    padding: 8px 24px !important;
+    font-size: 0.9rem !important;
+  }
+  .sw-start-instructions {
+    font-size: 0.65rem !important;
+    line-height: 1.3 !important;
+  }
+  .sw-start-highscore {
+    font-size: 0.72rem !important;
+  }
+  .sw-start-leaderboard {
+    padding: 8px 10px !important;
+  }
+  .sw-start-leaderboard-title {
+    font-size: 0.68rem !important;
+    margin-bottom: 4px !important;
+  }
+  .sw-start-leaderboard-table {
+    font-size: 0.65rem !important;
+  }
+  .sw-start-leaderboard-table th {
+    padding: 2px 4px !important;
+  }
+  .sw-start-leaderboard-table td {
+    padding: 3px 4px !important;
+  }
+}
+
 
