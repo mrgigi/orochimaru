@@ -56,16 +56,13 @@ export class GameEngine {
 
   loadImages(): void {
     this.bgImg = new Image();
-    this.bgImg.crossOrigin = 'anonymous';
-    this.bgImg.src = 'https://mgx-backend-cdn.metadl.com/generate/images/317302/2026-05-23/pddtcgaaagsq/battle-arena-background.png';
+    this.bgImg.src = '/assets/battle-arena-background.png';
 
     this.playerImg = new Image();
-    this.playerImg.crossOrigin = 'anonymous';
-    this.playerImg.src = 'https://mgx-backend-cdn.metadl.com/generate/images/317302/2026-05-23/pdds5uiaagsa/orochimaru-character.png';
+    this.playerImg.src = '/assets/orochimaru-character.png';
 
     this.enemyImg = new Image();
-    this.enemyImg.crossOrigin = 'anonymous';
-    this.enemyImg.src = 'https://mgx-backend-cdn.metadl.com/generate/images/317302/2026-05-23/pddtapiaagra/enemy-anbu-ninja.png';
+    this.enemyImg.src = '/assets/enemy-anbu-ninja.png';
   }
 
   setupInput(): void {
