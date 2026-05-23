@@ -307,12 +307,26 @@ export function SerpentsWrathWebView({ onExit, onGoToLeaderboard }: SerpentsWrat
 
               <div className="instructions-card-glow-web">
                 <div className="instruction-item">
-                  <span className="key-cap">W</span> <span className="key-cap">A</span> <span className="key-cap">S</span> <span className="key-cap">D</span>
-                  <span><strong>Move:</strong> Navigate freely in all directions across the entire lab room</span>
+                  <div className="instruction-keys">
+                    <span className="key-cap">W</span>
+                    <span className="key-cap">A</span>
+                    <span className="key-cap">S</span>
+                    <span className="key-cap">D</span>
+                  </div>
+                  <div className="instruction-text">
+                    <strong>Move:</strong> Navigate freely in all directions across the entire lab room
+                  </div>
                 </div>
                 <div className="instruction-item">
-                  <span className="key-cap">Q</span> <span className="key-cap">E</span> <span className="key-cap">R</span> <span className="key-cap">Space</span>
-                  <span><strong>Combat:</strong> Cast Jutsus (Spacebar triggers the Edo Tensei Ultimate)</span>
+                  <div className="instruction-keys">
+                    <span className="key-cap">Q</span>
+                    <span className="key-cap">E</span>
+                    <span className="key-cap">R</span>
+                    <span className="key-cap">Space</span>
+                  </div>
+                  <div className="instruction-text">
+                    <strong>Combat:</strong> Cast Jutsus (Spacebar triggers the Edo Tensei Ultimate)
+                  </div>
                 </div>
               </div>
 

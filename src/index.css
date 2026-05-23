@@ -562,6 +562,7 @@ body {
   font-size: 0.85rem;
   font-weight: 700;
   color: var(--text-pale);
+  padding-right: 80px; /* Prevent overlap with top-right absolute badges */
 }
 
 .game-desc {
@@ -2928,9 +2929,21 @@ body {
 
 .instructions-card-glow-web .instruction-item {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  align-items: flex-start;
+  gap: 12px;
   font-size: 12px;
+  color: var(--text-grey);
+}
+
+.instruction-keys {
+  display: flex;
+  gap: 5px;
+  flex-shrink: 0;
+  align-items: center;
+}
+
+.instruction-text {
+  line-height: 1.4;
   color: var(--text-grey);
 }
 
