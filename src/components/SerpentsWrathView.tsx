@@ -53,7 +53,7 @@ export function SerpentsWrathView({ onExit, onGoToLeaderboard }: SerpentsWrathVi
       if (!audioRef.current) {
         audioRef.current = new Audio('/assets/orochimaru_theme.mp3');
         audioRef.current.loop = true;
-        audioRef.current.volume = 0.4;
+        audioRef.current.volume = 0.12;
       }
       audioRef.current.play().catch(err => {
         console.warn('Failed to play background music:', err);
