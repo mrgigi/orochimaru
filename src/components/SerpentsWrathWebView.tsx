@@ -10,7 +10,8 @@ import {
   Volume2,
   VolumeX
 } from 'lucide-react';
-import { SerpentsWrathEngine, ATTACK_DEFS, WAVE_DEFS } from '../game/SerpentsWrathEngine';
+import { GameEngine } from '../game/sw/GameEngine';
+import { GameState } from '../game/sw/types';
 import { synth } from '../audio/SynthManager';
 import serpentsBanner from '../assets/serpents_wrath_banner.png';
 import { useGameStore } from '../hooks/useGameStore';
@@ -22,10 +23,27 @@ interface SerpentsWrathWebViewProps {
   onGoToLeaderboard: () => void;
 }
 
+const ATTACK_DEFS_SW = {
+  snake_strike: { key: 'Q', label: 'Snake Strike', color: '#39ff14', cooldown: 500 },
+  shadow_snake: { key: 'E', label: 'Shadow Snake', color: '#8b00ff', cooldown: 1000 },
+  kusanagi: { key: 'R', label: 'Kusanagi', color: '#ffd700', cooldown: 2000 },
+  edo_tensei: { key: 'Space', label: 'Edo Tensei', color: '#ff0066', cooldown: 5000 },
+};
+
+const WAVE_DEFS_SW = [
+  { label: 'Leaf Genin' },
+  { label: 'Chunin Assault' },
+  { label: 'ANBU Black Ops' },
+  { label: 'Jonin Strike' },
+  { label: 'Elite Guard' },
+  { label: 'Full Assault' },
+  { label: 'Shadow Kage (Boss)' },
+];
+
 export function SerpentsWrathWebView({ onExit, onGoToLeaderboard }: SerpentsWrathWebViewProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const engineRef = useRef<SerpentsWrathEngine | null>(null);
+  const engineRef = useRef<GameEngine | null>(null);
   const store = useGameStore();
 
   const [screen, setScreen] = useState<ScreenState>('start');
@@ -79,35 +97,34 @@ export function SerpentsWrathWebView({ onExit, onGoToLeaderboard }: SerpentsWrat
       if (!canvasRef.current) return;
       if (engineRef.current) { engineRef.current.cleanup(); }
 
-      const engine = new SerpentsWrathEngine({
-        canvas: canvasRef.current,
-        showHUD: false, // Turn off engine's canvas-drawn HUD
-        onGameOver: (score, kills, waves) => {
-          setFinalScore(score);
-          setFinalKills(kills);
-          setFinalWaves(waves + 1);
+      const engine = new GameEngine(canvasRef.current, (state, stats) => {
+        if (state === GameState.GAME_OVER) {
+          setFinalScore(stats.score);
+          setFinalKills(stats.kills);
+          setFinalWaves(stats.wave); // stats.wave is 1-based (so 1 to 7)
           setScreen('gameover');
           synth.playSnake();
-        },
-        onVictory: (score, kills) => {
-          setFinalScore(score);
-          setFinalKills(kills);
-          setFinalWaves(6);
+        } else if (state === GameState.VICTORY) {
+          setFinalScore(stats.score);
+          setFinalKills(stats.kills);
+          setFinalWaves(7);
           setScreen('victory');
           synth.playRumble();
-        },
-        onPlaySound: (type) => {
-          if (type === 'attack') synth.playSlash();
-          else if (type === 'ultimate') { synth.playRumble(); }
-          else if (type === 'hit' || type === 'death') synth.playSnake();
-          else if (type === 'wave') { synth.playRumble(); }
         }
       });
 
+      engine.audio.setMuted(store.muteAudio);
       engineRef.current = engine;
       engine.start();
     }, 100);
-  }, []);
+  }, [store.muteAudio]);
+
+  // Synchronize audio mute state with the engine
+  useEffect(() => {
+    if (engineRef.current) {
+      engineRef.current.audio.setMuted(store.muteAudio);
+    }
+  }, [store.muteAudio]);
 
   // Frame loop in React to update the overlay HUD elements directly
   useEffect(() => {
@@ -141,7 +158,7 @@ export function SerpentsWrathWebView({ onExit, onGoToLeaderboard }: SerpentsWrat
         scoreTextRef.current.innerText = `SCORE: ${state.score}`;
       }
       if (waveTextRef.current) {
-        waveTextRef.current.innerText = `WAVE ${state.wave + 1}/6`;
+        waveTextRef.current.innerText = `WAVE ${state.wave + 1}/7`;
       }
       if (killsTextRef.current) {
         killsTextRef.current.innerText = `KILLS: ${state.kills}`;
@@ -153,7 +170,7 @@ export function SerpentsWrathWebView({ onExit, onGoToLeaderboard }: SerpentsWrat
         const ref = cdRefs[type].current;
         if (ref) {
           const framesRemaining = state.cooldowns[type];
-          const def = ATTACK_DEFS[type];
+          const def = ATTACK_DEFS_SW[type];
           const maxFrames = Math.ceil(def.cooldown / (1000 / 60));
           const fraction = framesRemaining / maxFrames;
 
@@ -249,11 +266,11 @@ export function SerpentsWrathWebView({ onExit, onGoToLeaderboard }: SerpentsWrat
               <div className="sw-logo-block">
                 <span className="sw-token-pill">TOKEN: OROCHIMARU</span>
                 <h1 className="sw-title">SERPENT'S WRATH</h1>
-                <p className="sw-tagline">Clear 6 waves of Hidden Leaf shinobi using Orochimaru's forbidden jutsus.</p>
+                <p className="sw-tagline">Clear 7 waves of Hidden Leaf shinobi using Orochimaru's forbidden jutsus.</p>
               </div>
 
               <div className="sw-wave-preview">
-                {WAVE_DEFS.map((w, i) => (
+                {WAVE_DEFS_SW.map((w, i) => (
                   <div key={i} className="sw-wave-chip">
                     <span className="sw-wave-num">{i + 1}</span>
                     <span className="sw-wave-name">{w.label}</span>
@@ -317,14 +334,14 @@ export function SerpentsWrathWebView({ onExit, onGoToLeaderboard }: SerpentsWrat
             {/* Top-Right HUD (Score / Wave / Kills Metrics) */}
             <div className="web-hud-top-right">
               <span ref={scoreTextRef} className="web-hud-stat score">SCORE: 0</span>
-              <span ref={waveTextRef} className="web-hud-stat wave">WAVE 1/6</span>
+              <span ref={waveTextRef} className="web-hud-stat wave">WAVE 1/7</span>
               <span ref={killsTextRef} className="web-hud-stat kills">KILLS: 0</span>
             </div>
 
             {/* Bottom-Center HUD (Q / W / E / R Combat cards) */}
             <div className="web-hud-bottom-center">
               {attackKeys.map(type => {
-                const def = ATTACK_DEFS[type];
+                const def = ATTACK_DEFS_SW[type];
                 let colorClass = 'green-glow';
                 if (type === 'shadow_snake') colorClass = 'purple-glow';
                 else if (type === 'kusanagi') colorClass = 'gold-glow';
@@ -372,7 +389,7 @@ export function SerpentsWrathWebView({ onExit, onGoToLeaderboard }: SerpentsWrat
                 </div>
                 <div className="sw-stat-box">
                   <Swords size={16} className="text-purple" />
-                  <span className="sw-stat-val">{finalWaves} / 6</span>
+                  <span className="sw-stat-val">{finalWaves} / 7</span>
                   <span className="sw-stat-label">WAVES CLEARED</span>
                 </div>
               </div>
@@ -417,7 +434,7 @@ export function SerpentsWrathWebView({ onExit, onGoToLeaderboard }: SerpentsWrat
 
               <h2 className="sw-result-title victory-title">VICTORY ACHIEVED</h2>
               <p className="sw-result-desc">
-                All 6 waves defeated. The Leaf Village lies in ruins. Orochimaru reigns supreme!
+                All 7 waves defeated. The Leaf Village lies in ruins. Orochimaru reigns supreme!
               </p>
 
               <div className="sw-stats-grid">
@@ -433,7 +450,7 @@ export function SerpentsWrathWebView({ onExit, onGoToLeaderboard }: SerpentsWrat
                 </div>
                 <div className="sw-stat-box">
                   <Zap size={16} className="text-gold" />
-                  <span className="sw-stat-val sw-gold">6 / 6</span>
+                  <span className="sw-stat-val sw-gold">7 / 7</span>
                   <span className="sw-stat-label">WAVES</span>
                 </div>
               </div>
