@@ -3463,4 +3463,97 @@ body {
   box-shadow: 0 0 12px var(--color-blue);
 }
 
+/* ── Start Screen Layout updates for Mobile / Short viewports ── */
+@media (max-width: 600px), (max-height: 850px) {
+  /* Banner adjustments */
+  .sw-banner-wrap {
+    height: 90px !important;
+  }
+  .sw-web-screen .sw-banner-wrap {
+    height: 70px !important;
+    margin-bottom: 5px !important;
+  }
+
+  /* Gap reduction in content container */
+  .sw-start-content {
+    gap: 8px !important;
+    padding: 0 15px 12px !important;
+  }
+
+  /* Logo block size scaling */
+  .sw-title {
+    font-size: 1.25rem !important;
+    letter-spacing: 2px !important;
+  }
+  .sw-token-pill {
+    font-size: 0.52rem !important;
+    padding: 1.5px 6px !important;
+    margin-bottom: 3px !important;
+  }
+  .sw-tagline {
+    font-size: 0.62rem !important;
+    margin-top: 1px !important;
+  }
+  .sw-sub-tagline {
+    font-size: 0.55rem !important;
+    margin-top: 2px !important;
+  }
+
+  /* Wave preview layout */
+  .sw-wave-preview {
+    gap: 4px !important;
+  }
+  .sw-wave-chip {
+    padding: 1.5px 5px !important;
+    gap: 3px !important;
+  }
+  .sw-wave-num {
+    width: 13px !important;
+    height: 13px !important;
+    font-size: 0.52rem !important;
+  }
+  .sw-wave-name {
+    font-size: 0.52rem !important;
+  }
+
+  /* Instructions cards scaling */
+  .instructions-card-glow-web {
+    padding: 8px 12px !important;
+    margin-bottom: 8px !important;
+    gap: 6px !important;
+  }
+  .instructions-card-glow-web .instruction-item {
+    gap: 6px !important;
+    font-size: 10px !important;
+  }
+  .key-cap {
+    font-size: 7.5px !important;
+    padding: 1px 4.5px !important;
+  }
+
+  /* Mobile controls preview grid */
+  .sw-controls-grid {
+    gap: 6px !important;
+    margin-bottom: 8px !important;
+  }
+  .sw-ctrl-col {
+    padding: 5px !important;
+  }
+  .sw-ctrl-col h4 {
+    font-size: 0.52rem !important;
+    margin-bottom: 1px !important;
+  }
+  .sw-ctrl-col p {
+    font-size: 0.52rem !important;
+  }
+
+  /* Action button */
+  .sw-start-btn {
+    padding: 10px 20px !important;
+    font-size: 0.78rem !important;
+    letter-spacing: 1.5px !important;
+    box-shadow: 0 0 15px rgba(189, 0, 255, 0.4) !important;
+  }
+}
+
 
