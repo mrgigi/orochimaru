@@ -1,0 +1,48 @@
+{
+  "status": "success",
+  "results": [
+    {
+      "status": "success",
+      "path": "https://mgx-backend-cdn.metadl.com/generate/images/317302/2026-05-23/pddtcgaaagsq/battle-arena-background.png",
+      "absolute_path": "https://mgx-backend-cdn.metadl.com/generate/images/317302/2026-05-23/pddtcgaaagsq/battle-arena-background.png",
+      "url": "https://mgx-backend-cdn.metadl.com/generate/images/317302/2026-05-23/pddtcgaaagsq/battle-arena-background.png",
+      "message": "Image generated successfully.\n\nNote: The image is on CDN and will be displayed automatically. Just describe what you created briefly, no need to mention filenames or URLs.",
+      "description": "Dark atmospheric battle arena background for a side-scrolling game, underground cave laboratory with purple glowing tubes, snake motifs carved in stone walls, eerie green mist, Naruto anime style hidden sound village aesthetic, wide panoramic view",
+      "style": "cartoon",
+      "filename": "battle-arena-background.jpg"
+    },
+    {
+      "status": "success",
+      "path": "https://mgx-backend-cdn.metadl.com/generate/images/317302/2026-05-23/pdds5uiaagsa/orochimaru-character.png",
+      "absolute_path": "https://mgx-backend-cdn.metadl.com/generate/images/317302/2026-05-23/pdds5uiaagsa/orochimaru-character.png",
+      "url": "https://mgx-backend-cdn.metadl.com/generate/images/317302/2026-05-23/pdds5uiaagsa/orochimaru-character.png",
+      "message": "Image generated successfully.\n\nNote: The image is on CDN and will be displayed automatically. Just describe what you created briefly, no need to mention filenames or URLs.",
+      "description": "Orochimaru character sprite facing right in battle stance, pale skin, long black hair, purple rope belt, grey tunic, golden snake eyes, menacing smile, anime style from Naruto, full body side view on transparent background",
+      "style": "cartoon",
+      "filename": "orochimaru-character.png"
+    },
+    {
+      "status": "success",
+      "path": "https://mgx-backend-cdn.metadl.com/generate/images/317302/2026-05-23/pddtapiaagra/enemy-anbu-ninja.png",
+      "absolute_path": "https://mgx-backend-cdn.metadl.com/generate/images/317302/2026-05-23/pddtapiaagra/enemy-anbu-ninja.png",
+      "url": "https://mgx-backend-cdn.metadl.com/generate/images/317302/2026-05-23/pddtapiaagra/enemy-anbu-ninja.png",
+      "message": "Image generated successfully.\n\nNote: The image is on CDN and will be displayed automatically. Just describe what you created briefly, no need to mention filenames or URLs.",
+      "description": "ANBU ninja enemy character sprite facing left in combat stance, white porcelain mask, dark cloak, katana drawn, anime style from Naruto, full body side view on transparent background",
+      "style": "cartoon",
+      "filename": "enemy-anbu-ninja.png"
+    },
+    {
+      "status": "success",
+      "path": "https://mgx-backend-cdn.metadl.com/generate/images/317302/2026-05-23/pddtd2aaagrq/game-logo-serpents-wrath.png",
+      "absolute_path": "https://mgx-backend-cdn.metadl.com/generate/images/317302/2026-05-23/pddtd2aaagrq/game-logo-serpents-wrath.png",
+      "url": "https://mgx-backend-cdn.metadl.com/generate/images/317302/2026-05-23/pddtd2aaagrq/game-logo-serpents-wrath.png",
+      "message": "Image generated successfully.\n\nNote: The image is on CDN and will be displayed automatically. Just describe what you created briefly, no need to mention filenames or URLs.",
+      "description": "Epic game logo text reading SERPENTS WRATH with a coiled purple and green snake wrapping around the letters, dark background with toxic green glow effects, bold angular font style, gaming logo aesthetic",
+      "style": "cartoon",
+      "filename": "game-logo-serpents-wrath.png"
+    }
+  ],
+  "success_count": 4,
+  "failed_count": 0,
+  "message": "Generated 4/4 images"
+}
