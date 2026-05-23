@@ -12,7 +12,7 @@ export function PlatformPickerModal({
   isOpen, 
   onClose, 
   onSelect, 
-  gameTitle = "Serpent's Wrath" 
+  gameTitle = "Serpent Fury" 
 }: PlatformPickerModalProps) {
   if (!isOpen) return null;
 

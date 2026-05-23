@@ -42,9 +42,36 @@ export function SerpentsWrathView({ onExit, onGoToLeaderboard }: SerpentsWrathVi
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const engineRef = useRef<GameEngine | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const store = useGameStore();
 
   const [screen, setScreen] = useState<ScreenState>('start');
+
+  // Handle background music playback during gameplay
+  useEffect(() => {
+    if (screen === 'playing' && !store.muteAudio) {
+      if (!audioRef.current) {
+        audioRef.current = new Audio('/assets/orochimaru_theme.mp3');
+        audioRef.current.loop = true;
+        audioRef.current.volume = 0.4;
+      }
+      audioRef.current.play().catch(err => {
+        console.warn('Failed to play background music:', err);
+      });
+    } else {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      }
+    }
+
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, [screen, store.muteAudio]);
   const [finalScore, setFinalScore] = useState(0);
   const [finalKills, setFinalKills] = useState(0);
   const [finalWaves, setFinalWaves] = useState(0);
@@ -281,7 +308,7 @@ export function SerpentsWrathView({ onExit, onGoToLeaderboard }: SerpentsWrathVi
           <ArrowLeft size={15} />
           <span>Hub</span>
         </button>
-        <span className="sw-game-title">SERPENT'S WRATH</span>
+        <span className="sw-game-title">SERPENT FURY</span>
         <span className="sw-badge">GAME V2</span>
       </div>
 
@@ -289,14 +316,14 @@ export function SerpentsWrathView({ onExit, onGoToLeaderboard }: SerpentsWrathVi
       {screen === 'start' && (
         <div className="sw-screen start-screen">
           <div className="sw-banner-wrap">
-            <img src={serpentsBanner} alt="Serpent's Wrath" className="sw-banner-img" />
+            <img src={serpentsBanner} alt="Serpent Fury" className="sw-banner-img" />
             <div className="sw-banner-overlay" />
           </div>
 
           <div className="sw-start-content">
             <div className="sw-logo-block">
               <span className="sw-token-pill">TOKEN: OROCHIMARU</span>
-              <h1 className="sw-title">SERPENT'S WRATH</h1>
+              <h1 className="sw-title">SERPENT FURY</h1>
               <p className="sw-tagline">"The Forbidden Jutsu of DeFi"</p>
             </div>
 

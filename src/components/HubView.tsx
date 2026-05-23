@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { synth } from '../audio/SynthManager';
 import orochimaruFace from '../assets/orochimaru_face.png';
+import serpentFuryIcon from '../assets/serpent_fury_icon.jpg';
 import { PlatformPickerModal } from './PlatformPickerModal';
 
 interface HubViewProps {
@@ -110,7 +111,7 @@ export function HubView({
         <h3 className="section-title">ECOSYSTEM GAMES</h3>
         <div className="games-grid">
           
-          {/* Game 1: Serpent's Wrath - Playable */}
+          {/* Game 1: Serpent Fury - Playable */}
           <div 
             onClick={() => handleGameClick('game2', false)}
             className="game-card playable-card"
@@ -118,11 +119,15 @@ export function HubView({
           >
             <div className="game-status active-status">BATTLE ARENA</div>
             <div className="game-card-content">
-              <div className="game-icon-container">
-                <div className="game-icon text-purple" style={{ fontSize: '28px' }}>🐍</div>
+              <div className="game-icon-container" style={{ overflow: 'hidden', padding: 0 }}>
+                <img 
+                  src={serpentFuryIcon} 
+                  alt="Serpent Fury" 
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '3px' }} 
+                />
               </div>
               <div className="game-details">
-                <h4 className="game-title">Serpent's Wrath</h4>
+                <h4 className="game-title">Serpent Fury</h4>
                 <p className="game-desc">Omnidirectional 2D action game. Move freely, clear 7 waves of elite shinobi, and defeat the Hokage.</p>
               </div>
             </div>

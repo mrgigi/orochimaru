@@ -44,9 +44,36 @@ export function SerpentsWrathWebView({ onExit, onGoToLeaderboard }: SerpentsWrat
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const engineRef = useRef<GameEngine | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const store = useGameStore();
 
   const [screen, setScreen] = useState<ScreenState>('start');
+
+  // Handle background music playback during gameplay
+  useEffect(() => {
+    if (screen === 'playing' && !store.muteAudio) {
+      if (!audioRef.current) {
+        audioRef.current = new Audio('/assets/orochimaru_theme.mp3');
+        audioRef.current.loop = true;
+        audioRef.current.volume = 0.4;
+      }
+      audioRef.current.play().catch(err => {
+        console.warn('Failed to play background music:', err);
+      });
+    } else {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      }
+    }
+
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, [screen, store.muteAudio]);
   const [finalScore, setFinalScore] = useState(0);
   const [finalKills, setFinalKills] = useState(0);
   const [finalWaves, setFinalWaves] = useState(0);
@@ -237,7 +264,7 @@ export function SerpentsWrathWebView({ onExit, onGoToLeaderboard }: SerpentsWrat
         </button>
         <div className="sw-web-title-center">
           <span className="sw-web-subtitle">ECOSYSTEM COMBAT SIMULATOR</span>
-          <h2 className="sw-web-game-title">SERPENT'S WRATH</h2>
+          <h2 className="sw-web-game-title">SERPENT FURY</h2>
         </div>
         <div className="sw-web-badges">
           <span className="sw-web-badge platform">🖥️ WEB CONSOLE</span>
@@ -258,14 +285,14 @@ export function SerpentsWrathWebView({ onExit, onGoToLeaderboard }: SerpentsWrat
         {screen === 'start' && (
           <div className="sw-web-screen start-screen">
             <div className="sw-banner-wrap">
-              <img src={serpentsBanner} alt="Serpent's Wrath" className="sw-banner-img" />
+              <img src={serpentsBanner} alt="Serpent Fury" className="sw-banner-img" />
               <div className="sw-banner-overlay" />
             </div>
 
             <div className="sw-start-content">
               <div className="sw-logo-block">
                 <span className="sw-token-pill">TOKEN: OROCHIMARU</span>
-                <h1 className="sw-title">SERPENT'S WRATH</h1>
+                <h1 className="sw-title">SERPENT FURY</h1>
                 <p className="sw-tagline">Clear 7 waves of Hidden Leaf shinobi using Orochimaru's forbidden jutsus.</p>
               </div>
 
