@@ -9,8 +9,7 @@ import { SerpentsWrathWebView } from './components/SerpentsWrathWebView';
 import { LeaderboardView } from './components/LeaderboardView';
 import { 
   Coins, 
-  Home, 
-  Play
+  Home
 } from 'lucide-react';
 import './App.css';
 
@@ -27,6 +26,8 @@ function App() {
       store.setCurrentView('game2_mobile');
     } else if (gameId === 'leaderboard') {
       store.setCurrentView('leaderboard');
+    } else if (gameId === 'cave_trials') {
+      store.setCurrentView('cave_trials');
     }
   };
 
@@ -68,35 +69,44 @@ function App() {
         ) : store.currentView === 'leaderboard' ? (
           /* Shared Ecosystem Leaderboard */
           <LeaderboardView onExit={() => store.setCurrentView('hub')} />
+        ) : store.currentView === 'cave_trials' ? (
+          /* Game V3: Ryuchi Cave Survival (Standalone) */
+          <div className="game-v1-wrapper">
+            <CombatView
+              reanimations={store.reanimations}
+              combatHighScore={store.combatHighScore}
+              updateCombatHighScore={store.updateCombatHighScore}
+              addTokens={store.addTokens}
+              onExit={() => store.setCurrentView('hub')}
+            />
+          </div>
         ) : (
-          /* Game V1 view container */
+          /* Game V1 view container (Laboratory & Edo Altar) */
           <div className="game-v1-wrapper">
             
-            {/* Header display (only if not actively in combat canvas) */}
-            {store.activeTab !== 'combat' && (
-              <header className="game-v1-header">
-                <button 
-                  onClick={() => store.setCurrentView('hub')} 
-                  className="nav-home-btn"
-                  title="Return to Hub"
-                >
-                  <Home size={18} />
-                </button>
-                
-                <div className="game-v1-title-area">
-                  <span className="game-v1-subtitle">GAME V1</span>
-                  <h2 className="game-v1-title">Forbidden Lab</h2>
-                </div>
+            {/* Header display */}
+            <header className="game-v1-header">
+              <button 
+                onClick={() => store.setCurrentView('hub')} 
+                className="nav-home-btn"
+                title="Return to Hub"
+              >
+                <Home size={18} />
+              </button>
+              
+              <div className="game-v1-title-area">
+                <span className="game-v1-subtitle">GAME V1</span>
+                <h2 className="game-v1-title">Forbidden Lab</h2>
+              </div>
 
-                <div className="header-tokens-display">
-                  <Coins size={14} className="text-gold" />
-                  <span>{store.orochimaruTokens.toLocaleString()}</span>
-                </div>
-              </header>
-            )}
+              <div className="header-tokens-display">
+                <Coins size={14} className="text-gold" />
+                <span>{store.orochimaruTokens.toLocaleString()}</span>
+              </div>
+            </header>
 
             {/* Main view based on active tab */}
-            <main className={`game-v1-main ${store.activeTab === 'combat' ? 'combat-mode-active' : ''}`}>
+            <main className="game-v1-main">
               {store.activeTab === 'lab' && (
                 <LabView
                   forbiddenCells={store.forbiddenCells}
@@ -117,55 +127,33 @@ function App() {
                   buyReanimation={store.buyReanimation}
                 />
               )}
-
-              {store.activeTab === 'combat' && (
-                <CombatView
-                  reanimations={store.reanimations}
-                  combatHighScore={store.combatHighScore}
-                  updateCombatHighScore={store.updateCombatHighScore}
-                  addTokens={store.addTokens}
-                  onExit={() => store.setActiveTab('lab')}
-                />
-              )}
             </main>
 
-            {/* Bottom tabs selector (hidden when canvas combat is active) */}
-            {store.activeTab !== 'combat' && (
-              <nav className="game-v1-bottom-nav">
-                <button
-                  onClick={() => store.setActiveTab('lab')}
-                  className={`nav-tab-item ${store.activeTab === 'lab' ? 'active' : ''}`}
-                >
-                  <span>🧪</span>
-                  <span className="tab-label">Laboratory</span>
-                </button>
+            {/* Bottom tabs selector */}
+            <nav className="game-v1-bottom-nav">
+              <button
+                onClick={() => store.setActiveTab('lab')}
+                className={`nav-tab-item ${store.activeTab === 'lab' ? 'active' : ''}`}
+              >
+                <span>🧪</span>
+                <span className="tab-label">Laboratory</span>
+              </button>
 
-                <button
-                  onClick={() => store.setActiveTab('altar')}
-                  className={`nav-tab-item ${store.activeTab === 'altar' ? 'active' : ''}`}
-                >
-                  <span>⚰️</span>
-                  <span className="tab-label">Edo Altar</span>
-                </button>
+              <button
+                onClick={() => store.setActiveTab('altar')}
+                className={`nav-tab-item ${store.activeTab === 'altar' ? 'active' : ''}`}
+              >
+                <span>⚰️</span>
+                <span className="tab-label">Edo Altar</span>
+              </button>
+            </nav>
 
-                <button
-                  onClick={() => store.setActiveTab('combat')}
-                  className="nav-tab-item combat-tab-btn"
-                >
-                  <Play size={14} className="play-icon-glow" />
-                  <span className="tab-label">Cave Trials</span>
-                </button>
-              </nav>
-            )}
-
-            {/* Reset progress button (for convenience / developer ease) */}
-            {store.activeTab !== 'combat' && (
-              <div className="reset-bar">
-                <button onClick={store.resetGame} className="reset-game-btn">
-                  Reset Lab Research Data
-                </button>
-              </div>
-            )}
+            {/* Reset progress button */}
+            <div className="reset-bar">
+              <button onClick={store.resetGame} className="reset-game-btn">
+                Reset Lab Research Data
+              </button>
+            </div>
           </div>
         )}
       </div>

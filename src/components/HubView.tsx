@@ -115,14 +115,14 @@ export function HubView({
             onClick={() => handleGameClick('game1', false)}
             className="game-card playable-card"
           >
-            <div className="game-status active-status">VERSION 1</div>
+            <div className="game-status active-status">LABORATORY</div>
             <div className="game-card-content">
               <div className="game-icon-container">
                 <Skull className="game-icon text-green" size={28} />
               </div>
               <div className="game-details">
                 <h4 className="game-title">Forbidden Lab: DNA Idle</h4>
-                <p className="game-desc">Perform experiments, reanimate Hokages, and defend the lab from Konoha shinobi.</p>
+                <p className="game-desc">Perform experiments, harvest Forbidden Cells, and purify DNA to earn token rewards.</p>
               </div>
             </div>
             <button className="play-now-btn">
@@ -131,28 +131,49 @@ export function HubView({
             </button>
           </div>
 
-          {/* Game 2: Serpent's Wrath - Playable */}
+          {/* Game 2: Ryuchi Cave Survival - Playable */}
           <div 
-            onClick={() => handleGameClick('game2', false)}
+            onClick={() => handleGameClick('cave_trials', false)}
             className="game-card playable-card game-card-v2"
           >
-            <div className="game-status active-status">VERSION 2</div>
+            <div className="game-status active-status">SURVIVAL</div>
             <div className="game-card-content">
               <div className="game-icon-container">
                 <Swords className="game-icon text-purple" size={28} />
               </div>
               <div className="game-details">
-                <h4 className="game-title">Serpent's Wrath</h4>
-                <p className="game-desc">Immersive 2D battle arena. Fight 6 waves of Leaf elite using Q/E/R/Space jutsu attacks.</p>
+                <h4 className="game-title">Ryuchi Cave Survival</h4>
+                <p className="game-desc">Ryuchi Cave bullet-hell survival trials. Control Orochimaru, dodge ANBU strikes, and claim tokens.</p>
               </div>
             </div>
             <button className="play-now-btn play-v2-btn">
+              <Gamepad2 size={16} />
+              <span>ENTER CAVE</span>
+            </button>
+          </div>
+
+          {/* Game 3: Serpent's Wrath - Playable */}
+          <div 
+            onClick={() => handleGameClick('game2', false)}
+            className="game-card playable-card"
+          >
+            <div className="game-status active-status">BATTLE ARENA</div>
+            <div className="game-card-content">
+              <div className="game-icon-container">
+                <div className="game-icon text-purple" style={{ fontSize: '28px' }}>🐍</div>
+              </div>
+              <div className="game-details">
+                <h4 className="game-title">Serpent's Wrath</h4>
+                <p className="game-desc">Omnidirectional 2D action game. Move freely, clear 7 waves of elite shinobi, and defeat the Hokage.</p>
+              </div>
+            </div>
+            <button className="play-now-btn" style={{ background: 'linear-gradient(135deg, #a855f7, #ffd700)', color: '#000' }}>
               <Swords size={16} />
               <span>FIGHT NOW</span>
             </button>
           </div>
 
-          {/* Game 3: Locked */}
+          {/* Game 4: Locked */}
           <div 
             onClick={() => handleGameClick('game3', true)}
             className="game-card locked-card"
@@ -282,7 +303,7 @@ export function HubView({
 
       {/* Footer Branding */}
       <footer className="hub-footer">
-        <p>© 2026 $OROCHIMARU Ecosystem. Developed on Ethereum.</p>
+        <p>© 2026 OROCHIMARU Ecosystem. Developed on Ethereum.</p>
       </footer>
 
       {/* Platform Selection Modal */}

@@ -151,7 +151,7 @@ export function useGameStore() {
     };
   });
 
-  const [currentView, setCurrentView] = useState<'hub' | 'game1' | 'game2_mobile' | 'game2_web' | 'leaderboard'>('hub');
+  const [currentView, setCurrentView] = useState<'hub' | 'game1' | 'game2_mobile' | 'game2_web' | 'leaderboard' | 'cave_trials'>('hub');
   const [activeTab, setActiveTab] = useState<'lab' | 'altar' | 'combat'>('lab');
 
   // Keep a ref to bypass stale state in timer callbacks
