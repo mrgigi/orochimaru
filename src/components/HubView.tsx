@@ -90,9 +90,9 @@ export function HubView({
         
         <div className="hero-content">
           <div className="hero-text">
-            <h1 className="hero-title-main">ECOSYSTEM</h1>
-            <h1 className="hero-title-sub">ARCHITECTURE</h1>
-            <p className="hero-tagline">Long-Term Retention & Community Strategy</p>
+            <h1 className="hero-title-main">OROCHIMARU</h1>
+            <h1 className="hero-title-sub">SHINOBI PORTAL</h1>
+            <p className="hero-tagline">Shed your limits, reanimate legends, and rule the leaderboard.</p>
           </div>
           <div className="hero-avatar-container">
             <img 
@@ -110,7 +110,29 @@ export function HubView({
         <h3 className="section-title">ECOSYSTEM GAMES</h3>
         <div className="games-grid">
           
-          {/* Game 1: Playable */}
+          {/* Game 1: Serpent's Wrath - Playable */}
+          <div 
+            onClick={() => handleGameClick('game2', false)}
+            className="game-card playable-card"
+            style={{ borderImageSource: 'linear-gradient(135deg, #ffd700, #8b00ff)' }}
+          >
+            <div className="game-status active-status">BATTLE ARENA</div>
+            <div className="game-card-content">
+              <div className="game-icon-container">
+                <div className="game-icon text-purple" style={{ fontSize: '28px' }}>🐍</div>
+              </div>
+              <div className="game-details">
+                <h4 className="game-title">Serpent's Wrath</h4>
+                <p className="game-desc">Omnidirectional 2D action game. Move freely, clear 7 waves of elite shinobi, and defeat the Hokage.</p>
+              </div>
+            </div>
+            <button className="play-now-btn" style={{ background: 'linear-gradient(135deg, #a855f7, #ffd700)', color: '#000' }}>
+              <Swords size={16} />
+              <span>FIGHT NOW</span>
+            </button>
+          </div>
+
+          {/* Game 2: Forbidden Lab - Playable */}
           <div 
             onClick={() => handleGameClick('game1', false)}
             className="game-card playable-card"
@@ -131,7 +153,7 @@ export function HubView({
             </button>
           </div>
 
-          {/* Game 2: Ryuchi Cave Survival - Playable */}
+          {/* Game 3: Ryuchi Cave Survival - Playable */}
           <div 
             onClick={() => handleGameClick('cave_trials', false)}
             className="game-card playable-card game-card-v2"
@@ -149,27 +171,6 @@ export function HubView({
             <button className="play-now-btn play-v2-btn">
               <Gamepad2 size={16} />
               <span>ENTER CAVE</span>
-            </button>
-          </div>
-
-          {/* Game 3: Serpent's Wrath - Playable */}
-          <div 
-            onClick={() => handleGameClick('game2', false)}
-            className="game-card playable-card"
-          >
-            <div className="game-status active-status">BATTLE ARENA</div>
-            <div className="game-card-content">
-              <div className="game-icon-container">
-                <div className="game-icon text-purple" style={{ fontSize: '28px' }}>🐍</div>
-              </div>
-              <div className="game-details">
-                <h4 className="game-title">Serpent's Wrath</h4>
-                <p className="game-desc">Omnidirectional 2D action game. Move freely, clear 7 waves of elite shinobi, and defeat the Hokage.</p>
-              </div>
-            </div>
-            <button className="play-now-btn" style={{ background: 'linear-gradient(135deg, #a855f7, #ffd700)', color: '#000' }}>
-              <Swords size={16} />
-              <span>FIGHT NOW</span>
             </button>
           </div>
 
