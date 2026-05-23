@@ -9,7 +9,6 @@ import {
   Gamepad2, 
   Volume2, 
   VolumeX, 
-  Skull,
   Coins,
   Swords,
   Trophy
@@ -17,6 +16,8 @@ import {
 import { synth } from '../audio/SynthManager';
 import orochimaruFace from '../assets/orochimaru_face.png';
 import serpentFuryIcon from '../assets/serpent_fury_icon.jpg';
+import forbiddenLabIcon from '../assets/forbidden_lab_icon.jpg';
+import ryuchiCaveIcon from '../assets/ryuchi_cave_icon.jpg';
 import { PlatformPickerModal } from './PlatformPickerModal';
 
 interface HubViewProps {
@@ -144,8 +145,12 @@ export function HubView({
           >
             <div className="game-status active-status">LABORATORY</div>
             <div className="game-card-content">
-              <div className="game-icon-container">
-                <Skull className="game-icon text-green" size={28} />
+              <div className="game-icon-container" style={{ overflow: 'hidden', padding: 0 }}>
+                <img 
+                  src={forbiddenLabIcon} 
+                  alt="Forbidden Lab" 
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '3px' }} 
+                />
               </div>
               <div className="game-details">
                 <h4 className="game-title">Forbidden Lab: DNA Idle</h4>
@@ -165,8 +170,12 @@ export function HubView({
           >
             <div className="game-status active-status">SURVIVAL</div>
             <div className="game-card-content">
-              <div className="game-icon-container">
-                <Swords className="game-icon text-purple" size={28} />
+              <div className="game-icon-container" style={{ overflow: 'hidden', padding: 0 }}>
+                <img 
+                  src={ryuchiCaveIcon} 
+                  alt="Ryuchi Cave" 
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '3px' }} 
+                />
               </div>
               <div className="game-details">
                 <h4 className="game-title">Ryuchi Cave Survival</h4>
