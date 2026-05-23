@@ -39,10 +39,12 @@ function App() {
       <div className={containerClass}>
         
         {/* Floating Sound Toggle */}
-        <SoundToggle 
-          muteAudio={store.muteAudio} 
-          toggleMute={store.toggleMute} 
-        />
+        {store.currentView !== 'game2_web' && store.currentView !== 'game2_mobile' && (
+          <SoundToggle 
+            muteAudio={store.muteAudio} 
+            toggleMute={store.toggleMute} 
+          />
+        )}
 
         {store.currentView === 'hub' ? (
           /* Hub Landing Page */

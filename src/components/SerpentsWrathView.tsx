@@ -6,7 +6,9 @@ import {
   Trophy, 
   RefreshCw, 
   ArrowLeft,
-  Zap
+  Zap,
+  Volume2,
+  VolumeX
 } from 'lucide-react';
 import { GameEngine } from '../game/sw/GameEngine';
 import { GameState } from '../game/sw/types';
@@ -309,7 +311,17 @@ export function SerpentsWrathView({ onExit, onGoToLeaderboard }: SerpentsWrathVi
           <span>Hub</span>
         </button>
         <span className="sw-game-title">SERPENT FURY</span>
-        <span className="sw-badge">GAME V2</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <button 
+            onClick={store.toggleMute} 
+            className="sound-toggle-mini-web" 
+            title={store.muteAudio ? "Unmute" : "Mute"}
+            style={{ width: '28px', height: '28px', borderRadius: '4px' }}
+          >
+            {store.muteAudio ? <VolumeX size={14} /> : <Volume2 size={14} />}
+          </button>
+          <span className="sw-badge">GAME V2</span>
+        </div>
       </div>
 
       {/* ── START SCREEN ─────────────────────────────────── */}
