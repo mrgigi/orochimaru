@@ -670,30 +670,134 @@ export class GameEngine {
       ctx.save();
       ctx.shadowColor = proj.color;
       ctx.shadowBlur = 15;
-      ctx.fillStyle = proj.color;
 
       if (proj.attackName === 'Kusanagi') {
-        ctx.fillRect(proj.x, proj.y, proj.width, proj.height * 0.4);
+        ctx.save();
+        ctx.translate(proj.x, proj.y + proj.height / 2);
+        if (proj.speed < 0) {
+          ctx.scale(-1, 1);
+        }
+
+        // Draw legendary Kusanagi sword
+        // Steel blade
+        ctx.fillStyle = '#e5e9f0';
+        ctx.strokeStyle = '#4c566a';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(15, -4);
+        ctx.lineTo(proj.width - 6, -3);
+        ctx.lineTo(proj.width, 0); // Pointy tip
+        ctx.lineTo(proj.width - 6, 3);
+        ctx.lineTo(15, 4);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // Fuller (center blade line groove)
+        ctx.strokeStyle = '#8892b0';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(25, 0);
+        ctx.lineTo(proj.width - 15, 0);
+        ctx.stroke();
+
+        // Purple Guard (tsuba)
+        ctx.fillStyle = '#8b00ff';
+        ctx.strokeStyle = '#ffd700';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.rect(10, -10, 5, 20);
+        ctx.fill();
+        ctx.stroke();
+
+        // Pommel / Hilt wraps
+        ctx.fillStyle = '#1c1b29';
+        ctx.fillRect(0, -3, 10, 6);
+        ctx.fillStyle = '#ffd700';
+        ctx.beginPath();
+        ctx.arc(0, 0, 3, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
       } else if (proj.attackName === 'Edo Tensei') {
+        // Large reanimation orb
+        ctx.fillStyle = proj.color;
         ctx.beginPath();
         ctx.arc(proj.x + proj.width / 2, proj.y, proj.height, 0, Math.PI * 2);
         ctx.fill();
       } else {
+        // Draw serpentine snake strike projectile!
+        ctx.save();
+        ctx.translate(proj.x, proj.y + proj.height / 2);
+        if (proj.speed < 0) {
+          ctx.scale(-1, 1);
+        }
+
+        const len = proj.width;
+        // Winding snake body path
+        ctx.strokeStyle = proj.color;
+        ctx.lineWidth = 10;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
         ctx.beginPath();
-        ctx.moveTo(proj.x, proj.y);
-        ctx.quadraticCurveTo(
-          proj.x + proj.width / 2,
-          proj.y - 10,
-          proj.x + proj.width,
-          proj.y
-        );
-        ctx.quadraticCurveTo(
-          proj.x + proj.width / 2,
-          proj.y + 10,
-          proj.x,
-          proj.y
-        );
+        ctx.moveTo(0, 0);
+
+        const segments = 16;
+        for (let i = 0; i <= segments; i++) {
+          const sx = (i / segments) * (len - 15);
+          // Sine wave oscillation matching current frame
+          const sy = Math.sin(i * 0.9 + Date.now() * 0.015) * 6;
+          ctx.lineTo(sx, sy);
+        }
+        ctx.stroke();
+
+        // Dark scale overlay details
+        ctx.strokeStyle = '#0a0815';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        for (let i = 0; i <= segments; i++) {
+          const sx = (i / segments) * (len - 15);
+          const sy = Math.sin(i * 0.9 + Date.now() * 0.015) * 6;
+          ctx.lineTo(sx, sy);
+        }
+        ctx.stroke();
+
+        // Draw snake head
+        const headX = len - 12;
+        const headY = Math.sin(segments * 0.9 + Date.now() * 0.015) * 6;
+
+        ctx.fillStyle = proj.color;
+        ctx.beginPath();
+        ctx.arc(headX, headY, 7, 0, Math.PI * 2);
         ctx.fill();
+
+        ctx.beginPath();
+        ctx.moveTo(headX, headY - 5);
+        ctx.lineTo(headX + 11, headY);
+        ctx.lineTo(headX, headY + 5);
+        ctx.closePath();
+        ctx.fill();
+
+        // Glowing snake eyes
+        ctx.fillStyle = '#ffd700';
+        ctx.beginPath();
+        ctx.arc(headX + 1, headY - 2.5, 1.8, 0, Math.PI * 2);
+        ctx.arc(headX + 1, headY + 2.5, 1.8, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Forked tongue extending from snout
+        ctx.strokeStyle = '#ff2222';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(headX + 10, headY);
+        ctx.lineTo(headX + 18, headY);
+        ctx.lineTo(headX + 21, headY - 2.5);
+        ctx.moveTo(headX + 18, headY);
+        ctx.lineTo(headX + 21, headY + 2.5);
+        ctx.stroke();
+
+        ctx.restore();
       }
       ctx.restore();
     }
