@@ -71,6 +71,7 @@ export function SerpentsWrathWebView({ onExit, onGoToLeaderboard }: SerpentsWrat
   const [finalWaves, setFinalWaves] = useState(0);
   const [topScores, setTopScores] = useState<{name: string, score: number, waves: number}[]>([]);
   const [swHighScore, setSwHighScore] = useState(0);
+  const [showGiftModal, setShowGiftModal] = useState(false);
 
   // Leaderboard and high score reset
   useEffect(() => {
@@ -198,6 +199,10 @@ export function SerpentsWrathWebView({ onExit, onGoToLeaderboard }: SerpentsWrat
           setFinalWaves(7);
           setScreen('victory');
           synth.playRumble();
+        } else if (state === GameState.PAUSED) {
+          if (stats.wave === 2) {
+            setShowGiftModal(true);
+          }
         }
       });
 
@@ -766,6 +771,43 @@ export function SerpentsWrathWebView({ onExit, onGoToLeaderboard }: SerpentsWrat
         )}
 
       </div>
+
+      {showGiftModal && (
+        <div className="gift-modal-overlay">
+          <div className="gift-modal-card animate-scale-in">
+            <div className="gift-icon-glow">🎁</div>
+            <h2 className="gift-title">SHINOBI GIFT UNLOCKED!</h2>
+            <p className="gift-desc">
+              Congratulations, Genin! You successfully survived the first raid wave.
+            </p>
+            <div className="gift-reward-box">
+              <span className="gift-reward-label">YOUR REWARD</span>
+              <strong className="gift-reward-value">+250 PTS</strong>
+            </div>
+            <div className="gift-promo-banner">
+              <div className="promo-text-highlight">🏆 LIMITED TIME QUEST:</div>
+              <p className="promo-details">
+                First person to gather all <strong>5 Forbidden NFTs</strong> gets a <strong>$100 Cash reward!</strong>
+              </p>
+              <p className="promo-encourage">
+                Keep playing to win more PTS, reanimate stronger legends, and claim your glory!
+              </p>
+            </div>
+            <button 
+              onClick={() => {
+                store.addTokens(250);
+                if (engineRef.current) {
+                  engineRef.current.resume();
+                }
+                setShowGiftModal(false);
+              }}
+              className="gift-claim-btn"
+            >
+              CLAIM PTS & CONTINUE BATTLE
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

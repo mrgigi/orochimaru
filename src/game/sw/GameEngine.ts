@@ -307,6 +307,14 @@ export class GameEngine {
     this.cleanup();
   }
 
+  resume(): void {
+    if (this.gameState === GameState.PAUSED) {
+      this.gameState = GameState.PLAYING;
+      this.lastTime = performance.now();
+      this.onStateChange(this.gameState, this.stats);
+    }
+  }
+
   cleanup(): void {
     cancelAnimationFrame(this.animationId);
     window.removeEventListener('keydown', this.handleKeyDownBound);
@@ -456,9 +464,15 @@ export class GameEngine {
         cancelAnimationFrame(this.animationId);
         return;
       }
+      const completedWave = this.stats.wave;
       this.stats.wave++;
       this.waveSpawned = false;
       this.audio.playWaveComplete();
+      
+      if (completedWave === 1) {
+        this.gameState = GameState.PAUSED;
+      }
+      
       this.onStateChange(this.gameState, this.stats);
     }
 
