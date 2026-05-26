@@ -203,7 +203,6 @@ export function HubView({
             className="game-card playable-card featured-showcase-card"
             style={{ borderImageSource: 'linear-gradient(135deg, #ffd700, #8b00ff)' }}
           >
-            <div className="game-status active-status">PLAYABLE DEMO (EARLY ACCESS)</div>
             
             {/* Centered 16:9 video player preview */}
             <div className="showcase-video-wrapper" onClick={(e) => e.stopPropagation()}>
