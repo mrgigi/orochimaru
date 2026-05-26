@@ -327,26 +327,6 @@ export function HubView({
             <div className="locked-banner">COMING SOON</div>
           </div>
 
-          {/* Vault Item 3: Wood Release Blueprint */}
-          <div className="game-card locked-card">
-            <div className="game-status locked-status">
-              <Lock size={12} />
-              <span>LOCKED</span>
-            </div>
-            
-            <div className="game-card-content">
-              <div className="game-icon-container" style={{ background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '50%', color: 'var(--text-grey)', width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Film size={20} style={{ opacity: 0.4 }} />
-              </div>
-              <div className="game-details">
-                <h4 className="game-title">Forbidden Blueprints: Wood Release</h4>
-                <p className="game-desc">Secret Senju DNA molecular reconstruction blueprints. Preview the Wood Golem summoning requirements.</p>
-              </div>
-            </div>
-            
-            <div className="locked-banner">COMING SOON</div>
-          </div>
-
         </div>
       </section>
 
