@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { synth } from '../audio/SynthManager';
 import { supabase } from '../lib/supabaseClient';
+import { COUNTRY_MAP } from '../lib/countries';
 
 interface LeaderboardEntry {
   id: string;
@@ -24,30 +25,6 @@ interface LeaderboardEntry {
   country?: string;
 }
 
-const COUNTRY_MAP: Record<string, { flag: string; label: string }> = {
-  US: { flag: '🇺🇸', label: 'USA' },
-  GB: { flag: '🇬🇧', label: 'UK' },
-  CA: { flag: '🇨🇦', label: 'CAN' },
-  AU: { flag: '🇦🇺', label: 'AUS' },
-  DE: { flag: '🇩🇪', label: 'GER' },
-  FR: { flag: '🇫🇷', label: 'FRA' },
-  JP: { flag: '🇯🇵', label: 'JPN' },
-  IN: { flag: '🇮🇳', label: 'IND' },
-  CN: { flag: '🇨🇳', label: 'CHN' },
-  BR: { flag: '🇧🇷', label: 'BRA' },
-  ZA: { flag: '🇿🇦', label: 'RSA' },
-  NG: { flag: '🇳🇬', label: 'NGA' },
-  ES: { flag: '🇪🇸', label: 'ESP' },
-  IT: { flag: '🇮🇹', label: 'ITA' },
-  NL: { flag: '🇳🇱', label: 'NED' },
-  SG: { flag: '🇸🇬', label: 'SGP' },
-  CH: { flag: '🇨🇭', label: 'SUI' },
-  SE: { flag: '🇸🇪', label: 'SWE' },
-  MX: { flag: '🇲🇽', label: 'MEX' },
-  RU: { flag: '🇷🇺', label: 'RUS' },
-  KR: { flag: '🇰🇷', label: 'KOR' },
-  OTHER: { flag: '🌍', label: 'GLO' }
-};
 
 function formatCountry(code: string | undefined): string {
   if (!code) return '🌍 GLO';

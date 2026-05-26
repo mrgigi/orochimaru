@@ -15,6 +15,7 @@ import { synth } from '../audio/SynthManager';
 import orochimaruFace from '../assets/orochimaru_face.png';
 import { useGameStore } from '../hooks/useGameStore';
 import { supabase } from '../lib/supabaseClient';
+import { COUNTRIES } from '../lib/countries';
 
 type ScreenState = 'start' | 'playing' | 'gameover' | 'victory';
 
@@ -290,26 +291,48 @@ export function SerpentsWrathWebView({ onExit, onGoToLeaderboard }: SerpentsWrat
 
   const submitScore = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!playerName.trim() || !playerEmail.trim() || !playerWallet.trim() || scoreSubmitted) return;
+
+    const trimmedName = playerName.trim();
+    const trimmedEmail = playerEmail.trim();
+    const trimmedWallet = playerWallet.trim();
+
+    if (!trimmedName || trimmedName.length < 2) {
+      alert('Please enter a valid Shinobi Name (at least 2 characters).');
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(trimmedEmail)) {
+      alert('Please enter a valid Email Address.');
+      return;
+    }
+
+    const ethRegex = /^0x[a-fA-F0-9]{40}$/;
+    if (!ethRegex.test(trimmedWallet)) {
+      alert('Please enter a valid Ethereum Wallet Address (must start with 0x and be 42 characters long, e.g., 0x71C229712aB297a7e8e50bB41A284E29037c89E1).');
+      return;
+    }
+
+    if (scoreSubmitted) return;
 
     try {
       setScoreSubmitted(true);
       
       // Save local profile defaults for convenience
-      localStorage.setItem('orochimaru_player_name', playerName.trim());
-      localStorage.setItem('orochimaru_player_email', playerEmail.trim());
-      localStorage.setItem('orochimaru_player_wallet', playerWallet.trim());
+      localStorage.setItem('orochimaru_player_name', trimmedName);
+      localStorage.setItem('orochimaru_player_email', trimmedEmail);
+      localStorage.setItem('orochimaru_player_wallet', trimmedWallet);
       localStorage.setItem('orochimaru_player_country', playerCountry);
 
       // Insert into Supabase database
       const { error } = await supabase.from('leaderboard').insert({
-        name: playerName.trim(),
+        name: trimmedName,
         score: finalScore,
         kills: finalKills,
         waves: finalWaves,
         platform: 'web',
-        email: playerEmail.trim(),
-        wallet_address: playerWallet.trim(),
+        email: trimmedEmail,
+        wallet_address: trimmedWallet,
         country: playerCountry
       });
 
@@ -608,28 +631,11 @@ export function SerpentsWrathWebView({ onExit, onGoToLeaderboard }: SerpentsWrat
                     onChange={(e) => setPlayerCountry(e.target.value)}
                     required
                   >
-                    <option value="US">🇺🇸 United States</option>
-                    <option value="GB">🇬🇧 United Kingdom</option>
-                    <option value="CA">🇨🇦 Canada</option>
-                    <option value="AU">🇦🇺 Australia</option>
-                    <option value="DE">🇩🇪 Germany</option>
-                    <option value="FR">🇫🇷 France</option>
-                    <option value="JP">🇯🇵 Japan</option>
-                    <option value="IN">🇮🇳 India</option>
-                    <option value="CN">🇨🇳 China</option>
-                    <option value="BR">🇧🇷 Brazil</option>
-                    <option value="ZA">🇿🇦 South Africa</option>
-                    <option value="NG">🇳🇬 Nigeria</option>
-                    <option value="ES">🇪🇸 Spain</option>
-                    <option value="IT">🇮🇹 Italy</option>
-                    <option value="NL">🇳🇱 Netherlands</option>
-                    <option value="SG">🇸🇬 Singapore</option>
-                    <option value="CH">🇨🇭 Switzerland</option>
-                    <option value="SE">🇸🇪 Sweden</option>
-                    <option value="MX">🇲🇽 Mexico</option>
-                    <option value="RU">🇷🇺 Russia</option>
-                    <option value="KR">🇰🇷 South Korea</option>
-                    <option value="OTHER">🌍 Other / Secret</option>
+                    {COUNTRIES.map((c) => (
+                      <option key={c.code} value={c.code}>
+                        {c.flag} {c.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
@@ -729,28 +735,11 @@ export function SerpentsWrathWebView({ onExit, onGoToLeaderboard }: SerpentsWrat
                     onChange={(e) => setPlayerCountry(e.target.value)}
                     required
                   >
-                    <option value="US">🇺🇸 United States</option>
-                    <option value="GB">🇬🇧 United Kingdom</option>
-                    <option value="CA">🇨🇦 Canada</option>
-                    <option value="AU">🇦🇺 Australia</option>
-                    <option value="DE">🇩🇪 Germany</option>
-                    <option value="FR">🇫🇷 France</option>
-                    <option value="JP">🇯🇵 Japan</option>
-                    <option value="IN">🇮🇳 India</option>
-                    <option value="CN">🇨🇳 China</option>
-                    <option value="BR">🇧🇷 Brazil</option>
-                    <option value="ZA">🇿🇦 South Africa</option>
-                    <option value="NG">🇳🇬 Nigeria</option>
-                    <option value="ES">🇪🇸 Spain</option>
-                    <option value="IT">🇮🇹 Italy</option>
-                    <option value="NL">🇳🇱 Netherlands</option>
-                    <option value="SG">🇸🇬 Singapore</option>
-                    <option value="CH">🇨🇭 Switzerland</option>
-                    <option value="SE">🇸🇪 Sweden</option>
-                    <option value="MX">🇲🇽 Mexico</option>
-                    <option value="RU">🇷🇺 Russia</option>
-                    <option value="KR">🇰🇷 South Korea</option>
-                    <option value="OTHER">🌍 Other / Secret</option>
+                    {COUNTRIES.map((c) => (
+                      <option key={c.code} value={c.code}>
+                        {c.flag} {c.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
