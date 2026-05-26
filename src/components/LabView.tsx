@@ -6,7 +6,10 @@ import {
   BookOpen, 
   Coins, 
   Plus,
-  ArrowRight
+  ArrowRight,
+  Clock,
+  CheckCircle,
+  AlertTriangle
 } from 'lucide-react';
 import type { Upgrade } from '../hooks/useGameStore';
 import { synth } from '../audio/SynthManager';
@@ -19,6 +22,9 @@ interface LabViewProps {
   buyUpgrade: (id: string) => boolean;
   convertCellsToTokens: () => number | false;
   clickCurseMark: (mult?: number) => number;
+  dailyPtsEarned: number;
+  dailyPtsRemaining: number;
+  dailyPtsCap: number;
 }
 
 interface FloatingParticle {
@@ -35,7 +41,10 @@ export function LabView({
   upgrades,
   buyUpgrade,
   convertCellsToTokens,
-  clickCurseMark
+  clickCurseMark,
+  dailyPtsEarned,
+  dailyPtsRemaining,
+  dailyPtsCap
 }: LabViewProps) {
   const [particles, setParticles] = useState<FloatingParticle[]>([]);
   const nextParticleId = useRef(0);
@@ -85,11 +94,22 @@ export function LabView({
   };
 
   const handleConvert = () => {
+    if (dailyPtsRemaining <= 0) {
+      synth.playSnake();
+      // Calculate ms until next UTC midnight
+      const now = new Date();
+      const nextMidnight = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1));
+      const diffMs = nextMidnight.getTime() - now.getTime();
+      const diffH = Math.floor(diffMs / 3_600_000);
+      const diffM = Math.floor((diffMs % 3_600_000) / 60_000);
+      alert(`Daily Shinobi Points limit reached! You've earned the maximum ${dailyPtsCap} PTS today. Resets in ${diffH}h ${diffM}m (UTC midnight).`);
+      return;
+    }
     const tokens = convertCellsToTokens();
     if (tokens) {
       synth.playRumble();
-      alert(`Successfully purified cells and claimed ${tokens.toLocaleString()} Shinobi Points!`);
-    } else {
+      alert(`Successfully purified cells and claimed ${tokens.toLocaleString()} Shinobi Points! (${dailyPtsCap - (dailyPtsEarned + tokens)} PTS remaining today)`);
+    } else if (forbiddenCells < 10000) {
       synth.playSnake();
       alert("Insufficient Forbidden Cells! You need at least 10,000 cells to perform purification.");
     }
@@ -110,6 +130,10 @@ export function LabView({
         return <FlaskConical size={20} />;
     }
   };
+
+  const dailyCapPercent = Math.min((dailyPtsEarned / dailyPtsCap) * 100, 100);
+  const isCapped = dailyPtsRemaining <= 0;
+  const isNearCap = dailyPtsEarned >= dailyPtsCap * 0.75;
 
   return (
     <div className="lab-view-container">
@@ -166,21 +190,80 @@ export function LabView({
         <div className="purify-card">
           <div className="purify-info">
             <h3 className="card-title">DNA Purification</h3>
-            <p className="card-subtitle">Purify DNA cells to accumulate Shinobi Points</p>
+            <p className="card-subtitle">Purify DNA cells to accumulate Shinobi Points — soulbound, non-transferable.</p>
             <div className="conversion-rate">
               <span>10,000 Cells</span>
               <ArrowRight size={14} className="text-muted" />
-              <span className="token-text">1 Point (PTS)</span>
+              <span className="token-text">1 PTS</span>
             </div>
           </div>
           <button 
             onClick={handleConvert} 
-            disabled={forbiddenCells < 10000}
+            disabled={forbiddenCells < 10000 || isCapped}
             className="purify-btn"
+            title={isCapped ? `Daily cap of ${dailyPtsCap} PTS reached` : undefined}
           >
             <Coins size={16} />
-            <span>PURIFY</span>
+            <span>{isCapped ? 'CAP REACHED' : 'PURIFY'}</span>
           </button>
+        </div>
+
+        {/* Daily PTS Cap Progress Bar */}
+        <div className="daily-cap-card" style={{
+          marginTop: 10,
+          padding: '10px 14px',
+          borderRadius: 8,
+          background: 'rgba(255,255,255,0.03)',
+          border: `1px solid ${isCapped ? 'rgba(248,113,113,0.3)' : isNearCap ? 'rgba(251,191,36,0.25)' : 'rgba(255,255,255,0.08)'}`,
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: '0.68rem', color: 'var(--text-grey)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+              {isCapped ? (
+                <><AlertTriangle size={11} style={{ color: '#f87171' }} /> Daily Limit Reached</>
+              ) : isNearCap ? (
+                <><Clock size={11} style={{ color: '#fbbf24' }} /> Approaching Daily Limit</>
+              ) : (
+                <><Clock size={11} /> Daily PTS Allowance</>
+              )}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              {isCapped && <CheckCircle size={11} style={{ color: '#f87171' }} />}
+              <span style={{
+                fontSize: '0.7rem',
+                fontWeight: 700,
+                color: isCapped ? '#f87171' : isNearCap ? '#fbbf24' : 'var(--color-gold)',
+                fontFamily: 'var(--font-heading)'
+              }}>
+                {dailyPtsEarned} / {dailyPtsCap} PTS
+              </span>
+            </div>
+          </div>
+          <div style={{
+            width: '100%',
+            height: 6,
+            background: 'rgba(255,255,255,0.07)',
+            borderRadius: 4,
+            overflow: 'hidden'
+          }}>
+            <div style={{
+              width: `${dailyCapPercent}%`,
+              height: '100%',
+              background: isCapped
+                ? 'linear-gradient(90deg, #f87171, #ef4444)'
+                : isNearCap
+                ? 'linear-gradient(90deg, #fbbf24, #f97316)'
+                : 'linear-gradient(90deg, #a855f7, #ffd700)',
+              borderRadius: 4,
+              transition: 'width 0.4s ease',
+              boxShadow: isCapped ? '0 0 6px rgba(248,113,113,0.4)' : '0 0 6px rgba(168,85,247,0.4)'
+            }} />
+          </div>
+          <p style={{ marginTop: 5, fontSize: '0.6rem', color: 'var(--text-grey)', opacity: 0.7 }}>
+            {isCapped
+              ? `Max ${dailyPtsCap} PTS/day earned. Resets at UTC midnight — come back tomorrow.`
+              : `${dailyPtsRemaining} PTS remaining today. Cap resets at UTC midnight.`
+            }
+          </p>
         </div>
       </section>
 

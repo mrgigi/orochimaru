@@ -6,7 +6,9 @@ import {
   Home, 
   Trash2, 
   Search,
-  Calendar
+  Calendar,
+  Coins,
+  Wallet
 } from 'lucide-react';
 import { synth } from '../audio/SynthManager';
 import { supabase } from '../lib/supabaseClient';
@@ -23,6 +25,7 @@ interface LeaderboardEntry {
   email?: string;
   walletAddress?: string;
   country?: string;
+  shinobiPts?: number;
 }
 
 
@@ -49,9 +52,10 @@ function formatWallet(address: string | undefined): string {
 
 interface LeaderboardViewProps {
   onExit: () => void;
+  localPlayerPts?: number;
 }
 
-export function LeaderboardView({ onExit }: LeaderboardViewProps) {
+export function LeaderboardView({ onExit, localPlayerPts }: LeaderboardViewProps) {
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [filter, setFilter] = useState<'all' | 'web' | 'mobile'>('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -80,18 +84,19 @@ export function LeaderboardView({ onExit }: LeaderboardViewProps) {
             timestamp: new Date(item.created_at).getTime(),
             email: item.email,
             walletAddress: item.wallet_address,
-            country: item.country
+            country: item.country,
+            shinobiPts: item.shinobi_pts ?? undefined
           }));
           setEntries(mapped);
           localStorage.setItem('orochimaru_leaderboard', JSON.stringify(mapped));
         } else {
           // Populate default mock data if database is empty
           const mockData: LeaderboardEntry[] = [
-            { id: '1', name: 'Kabuto_Yakushi', score: 75000, kills: 142, waves: 6, platform: 'web', timestamp: Date.now() - 3600000 * 2, email: 'kabuto@orochimaru.org', walletAddress: '0x71C229712aB297a7e8e50bB41A284E29037c89E1', country: 'JP' },
-            { id: '2', name: 'Kimimaro_K', score: 62000, kills: 118, waves: 5, platform: 'mobile', timestamp: Date.now() - 3600000 * 5, email: 'kimimaro@kaguya.net', walletAddress: '0x3aC9e28e8e89E197a7e8e50bB41A284E29037c89e5', country: 'CN' },
-            { id: '3', name: 'Sasuke_Uchiha', score: 58000, kills: 105, waves: 5, platform: 'web', timestamp: Date.now() - 3600000 * 12, email: 'sasuke@uchiha.com', walletAddress: '0x8bD15A412aB297a7e8e50bB41A284E29037c89E1', country: 'JP' },
-            { id: '4', name: 'Tayuya_Flute', score: 32000, kills: 64, waves: 3, platform: 'mobile', timestamp: Date.now() - 3600000 * 24, email: 'tayuya@sound4.org', walletAddress: '0xF6b46Cd12aB297a7e8e50bB41A284E29037c89E1', country: 'DE' },
-            { id: '5', name: 'Sakon_Ukon', score: 28000, kills: 58, waves: 3, platform: 'web', timestamp: Date.now() - 3600000 * 48, email: 'sakon@sound4.org', walletAddress: '0x9e2079512aB297a7e8e50bB41A284E29037c89E1', country: 'IT' }
+            { id: '1', name: 'Kabuto_Yakushi', score: 75000, kills: 142, waves: 6, platform: 'web', timestamp: Date.now() - 3600000 * 2, email: 'kabuto@orochimaru.org', walletAddress: '0x71C229712aB297a7e8e50bB41A284E29037c89E1', country: 'JP', shinobiPts: 1340 },
+            { id: '2', name: 'Kimimaro_K', score: 62000, kills: 118, waves: 5, platform: 'mobile', timestamp: Date.now() - 3600000 * 5, email: 'kimimaro@kaguya.net', walletAddress: '0x3aC9e28e8e89E197a7e8e50bB41A284E29037c89e5', country: 'CN', shinobiPts: 870 },
+            { id: '3', name: 'Sasuke_Uchiha', score: 58000, kills: 105, waves: 5, platform: 'web', timestamp: Date.now() - 3600000 * 12, email: 'sasuke@uchiha.com', walletAddress: '0x8bD15A412aB297a7e8e50bB41A284E29037c89E1', country: 'JP', shinobiPts: 620 },
+            { id: '4', name: 'Tayuya_Flute', score: 32000, kills: 64, waves: 3, platform: 'mobile', timestamp: Date.now() - 3600000 * 24, email: 'tayuya@sound4.org', walletAddress: '0xF6b46Cd12aB297a7e8e50bB41A284E29037c89E1', country: 'DE', shinobiPts: 200 },
+            { id: '5', name: 'Sakon_Ukon', score: 28000, kills: 58, waves: 3, platform: 'web', timestamp: Date.now() - 3600000 * 48, email: 'sakon@sound4.org', walletAddress: '0x9e2079512aB297a7e8e50bB41A284E29037c89E1', country: 'IT', shinobiPts: 185 }
           ];
 
           // Asynchronously attempt to seed database so it is ready
@@ -163,6 +168,8 @@ export function LeaderboardView({ onExit }: LeaderboardViewProps) {
     return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
   };
 
+  const topPtsHolder = [...entries].sort((a, b) => (b.shinobiPts ?? 0) - (a.shinobiPts ?? 0))[0];
+
   return (
     <div className="leaderboard-container">
       {/* Header bar */}
@@ -171,8 +178,8 @@ export function LeaderboardView({ onExit }: LeaderboardViewProps) {
           <Home size={18} />
         </button>
         <div className="leaderboard-title-area">
-          <span className="leaderboard-subtitle">SHARED DATABASE</span>
-          <h2 className="leaderboard-title">SHINOBI RANKINGS</h2>
+          <span className="leaderboard-subtitle">SOUL-BOUND ECONOMY</span>
+          <h2 className="leaderboard-title">OROCHI LEDGER</h2>
         </div>
         <button 
           onClick={handleClearLeaderboard} 
@@ -193,12 +200,28 @@ export function LeaderboardView({ onExit }: LeaderboardViewProps) {
           </div>
         </div>
         <div className="meta-card">
+          <Coins size={16} className="text-gold" />
+          <div className="meta-info">
+            <span>Top PTS Holder</span>
+            <strong>{topPtsHolder ? `${topPtsHolder.name} (${(topPtsHolder.shinobiPts ?? 0).toLocaleString()} PTS)` : 'None'}</strong>
+          </div>
+        </div>
+        <div className="meta-card">
           <Monitor size={16} className="text-green" />
           <div className="meta-info">
             <span>Total Simulated Runs</span>
             <strong>{entries.length}</strong>
           </div>
         </div>
+        {localPlayerPts !== undefined && (
+          <div className="meta-card" style={{ borderColor: 'rgba(168,85,247,0.3)', background: 'rgba(168,85,247,0.06)' }}>
+            <Coins size={16} style={{ color: '#a855f7' }} />
+            <div className="meta-info">
+              <span>Your Shinobi Points</span>
+              <strong style={{ color: '#a855f7' }}>{Math.floor(localPlayerPts).toLocaleString()} PTS</strong>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Filter and search controls */}
@@ -249,6 +272,9 @@ export function LeaderboardView({ onExit }: LeaderboardViewProps) {
               <span className="col-player">SHINOBI</span>
               <span className="col-country">COUNTRY</span>
               <span className="col-wallet">ETH WALLET</span>
+              <span className="col-pts" style={{ color: 'var(--color-gold)', display: 'flex', alignItems: 'center', gap: 3 }}>
+                <Coins size={10} /> PTS
+              </span>
               <span className="col-score">SCORE</span>
               <span className="col-kills">KILLS</span>
               <span className="col-waves">WAVES</span>
@@ -283,6 +309,12 @@ export function LeaderboardView({ onExit }: LeaderboardViewProps) {
                         <span className="text-muted opacity-50">—</span>
                       )}
                     </span>
+                    <span className="col-pts" style={{ color: 'var(--color-gold)', fontWeight: 700, fontFamily: 'var(--font-heading)' }}>
+                      {entry.shinobiPts !== undefined
+                        ? entry.shinobiPts.toLocaleString()
+                        : <span className="text-muted opacity-40">—</span>
+                      }
+                    </span>
                     <span className="col-score text-gold">
                       {entry.score.toLocaleString()}
                     </span>
@@ -315,6 +347,40 @@ export function LeaderboardView({ onExit }: LeaderboardViewProps) {
             </div>
           </div>
         )}
+      </div>
+
+      {/* Wallet Acquisition Funnel Banner */}
+      <div style={{
+        margin: '16px 0 0',
+        padding: '12px 16px',
+        borderRadius: 10,
+        background: 'linear-gradient(135deg, rgba(168,85,247,0.08), rgba(255,215,0,0.05))',
+        border: '1px solid rgba(168,85,247,0.2)',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 12
+      }}>
+        <div style={{
+          width: 36,
+          height: 36,
+          borderRadius: '50%',
+          background: 'rgba(168,85,247,0.12)',
+          border: '1px solid rgba(168,85,247,0.3)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0
+        }}>
+          <Wallet size={16} style={{ color: '#a855f7' }} />
+        </div>
+        <div>
+          <p style={{ margin: 0, fontSize: '0.72rem', fontWeight: 700, color: '#a855f7', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+            Connect Your Wallet
+          </p>
+          <p style={{ margin: '2px 0 0', fontSize: '0.62rem', color: 'var(--text-grey)', lineHeight: 1.5 }}>
+            Wallet addresses on this ledger feed the <strong style={{ color: 'var(--color-gold)' }}>$OROCHIMARU</strong> token holder acquisition funnel. Earn Shinobi Points through gameplay — future airdrops will reward top PTS holders.
+          </p>
+        </div>
       </div>
 
       <footer className="leaderboard-footer">

@@ -11,7 +11,10 @@ import {
   Gamepad2, 
   Coins,
   Swords,
-  Trophy
+  Trophy,
+  Zap,
+  Star,
+  Crown
 } from 'lucide-react';
 import { synth } from '../audio/SynthManager';
 import orochimaruFace from '../assets/orochimaru_face.png';
@@ -26,6 +29,38 @@ interface HubViewProps {
   onSelectGame: (gameId: string) => void;
   unlockedItems?: string[];
   onUnlockItem?: (itemId: string, cost: number) => boolean;
+}
+
+// Vault tier config
+const VAULT_TIERS = {
+  tier1: { label: 'TIER 1', range: '100–500 PTS', icon: Zap, color: '#22c55e', glow: 'rgba(34,197,94,0.2)' },
+  tier2: { label: 'TIER 2', range: '800–2,000 PTS', icon: Star, color: '#a855f7', glow: 'rgba(168,85,247,0.2)' },
+  tier3: { label: 'TIER 3', range: '3,500–8,000 PTS', icon: Crown, color: '#ffd700', glow: 'rgba(255,215,0,0.2)' }
+};
+
+function TierBadge({ tier }: { tier: keyof typeof VAULT_TIERS }) {
+  const config = VAULT_TIERS[tier];
+  const Icon = config.icon;
+  return (
+    <div style={{
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: 6,
+      padding: '4px 12px',
+      borderRadius: 20,
+      background: config.glow,
+      border: `1px solid ${config.color}40`,
+      marginBottom: 10
+    }}>
+      <Icon size={12} style={{ color: config.color }} />
+      <span style={{ fontSize: '0.65rem', fontWeight: 800, letterSpacing: '0.1em', color: config.color }}>
+        {config.label}
+      </span>
+      <span style={{ fontSize: '0.6rem', color: 'var(--text-grey)', letterSpacing: '0.04em' }}>
+        {config.range}
+      </span>
+    </div>
+  );
 }
 
 export function HubView({ 
@@ -96,7 +131,7 @@ export function HubView({
             <button 
               onClick={() => onSelectGame('leaderboard')} 
               className="leaderboard-toggle-mini"
-              title="View Leaderboard Scroll"
+              title="View Orochi Ledger"
             >
               <Trophy size={16} />
             </button>
@@ -123,6 +158,9 @@ export function HubView({
       {/* Games Catalog Section */}
       <section className="games-section">
         <h3 className="section-title">ECOSYSTEM GAMES</h3>
+        <p className="section-subtitle" style={{ fontSize: '0.68rem', color: 'var(--text-grey)', marginTop: '-8px', marginBottom: '12px' }}>
+          Earn Shinobi Points (PTS) through gameplay — soulbound, non-transferable, non-purchasable.
+        </p>
         <div className="games-grid">
           
           {/* Featured Showcase Game 1: Serpent Fury - Playable Demo */}
@@ -194,7 +232,7 @@ export function HubView({
               </div>
               <div className="game-details">
                 <h4 className="game-title">Forbidden Lab: DNA Idle</h4>
-                <p className="game-desc">Perform experiments, harvest Forbidden Cells, and purify DNA to earn token rewards.</p>
+                <p className="game-desc">Harvest Forbidden Cells, purify DNA, and earn Shinobi Points. Up to <strong>200 PTS/day</strong>.</p>
               </div>
             </div>
             <button className="play-now-btn">
@@ -219,7 +257,7 @@ export function HubView({
               </div>
               <div className="game-details">
                 <h4 className="game-title">Ryuchi Cave Survival</h4>
-                <p className="game-desc">Ryuchi Cave bullet-hell survival trials. Control Orochimaru, dodge ANBU strikes, and claim tokens.</p>
+                <p className="game-desc">Bullet-hell survival trials. Earn Shinobi Points for waves survived — daily PTS cap applies.</p>
               </div>
             </div>
             <button className="play-now-btn play-v2-btn">
@@ -257,10 +295,16 @@ export function HubView({
         <h3 className="section-title">FORBIDDEN VAULT</h3>
         <p className="section-subtitle" style={{ fontSize: '0.7rem', color: 'var(--text-grey)', marginTop: '-8px', marginBottom: '15px' }}>
           Spend Shinobi Points (PTS) to unlock classified intelligence, restricted training footage, and legendary blueprints.
+          No $OROCHIMARU tokens are earned through gameplay — PTS only.
         </p>
-        <div className="games-grid">
+
+        {/* ── TIER 1 ── */}
+        <div style={{ marginBottom: 6 }}>
+          <TierBadge tier="tier1" />
+        </div>
+        <div className="games-grid" style={{ marginBottom: 20 }}>
           
-          {/* Vault Item 1: Ryuchi Secrets (Trailer 2) */}
+          {/* Vault Item 1: Ryuchi Secrets (Trailer 2) — 100 PTS */}
           <div 
             onClick={isTrailer2Unlocked ? () => setActiveWatchVideoUrl('/assets/trailer2.mp4') : handleUnlockTrailer2}
             className={`game-card ${isTrailer2Unlocked ? 'playable-card' : 'locked-card'}`}
@@ -307,24 +351,110 @@ export function HubView({
             )}
           </div>
 
-          {/* Vault Item 2: Edo Secrets: Minato Namikaze */}
+          {/* Vault Item 1b: Tier 1 Placeholder — 500 PTS */}
           <div className="game-card locked-card">
             <div className="game-status locked-status">
               <Lock size={12} />
-              <span>LOCKED</span>
+              <span>500 PTS</span>
             </div>
-            
             <div className="game-card-content">
-              <div className="game-icon-container" style={{ background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '50%', color: 'var(--text-grey)', width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Film size={20} style={{ opacity: 0.4 }} />
+              <div className="game-icon-container" style={{ background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.15)', borderRadius: '50%', width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Film size={20} style={{ opacity: 0.4, color: '#22c55e' }} />
+              </div>
+              <div className="game-details">
+                <h4 className="game-title">Orochi's Origin Scroll</h4>
+                <p className="game-desc">Restricted access: lore scroll detailing Orochimaru's forbidden research origins and early experiments.</p>
+              </div>
+            </div>
+            <div className="locked-banner">COMING SOON</div>
+          </div>
+
+        </div>
+
+        {/* ── TIER 2 ── */}
+        <div style={{ marginBottom: 6 }}>
+          <TierBadge tier="tier2" />
+        </div>
+        <div className="games-grid" style={{ marginBottom: 20 }}>
+
+          {/* Tier 2 Item 1 — 800 PTS */}
+          <div className="game-card locked-card">
+            <div className="game-status locked-status">
+              <Lock size={12} />
+              <span>800 PTS</span>
+            </div>
+            <div className="game-card-content">
+              <div className="game-icon-container" style={{ background: 'rgba(168,85,247,0.06)', border: '1px solid rgba(168,85,247,0.15)', borderRadius: '50%', width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Star size={20} style={{ opacity: 0.4, color: '#a855f7' }} />
               </div>
               <div className="game-details">
                 <h4 className="game-title">Edo Secrets: Minato Namikaze</h4>
                 <p className="game-desc">Restricted file on the Fourth Hokage reanimation. Features character sprites and speed previews.</p>
               </div>
             </div>
-            
             <div className="locked-banner">COMING SOON</div>
+          </div>
+
+          {/* Tier 2 Item 2 — 2,000 PTS */}
+          <div className="game-card locked-card">
+            <div className="game-status locked-status">
+              <Lock size={12} />
+              <span>2,000 PTS</span>
+            </div>
+            <div className="game-card-content">
+              <div className="game-icon-container" style={{ background: 'rgba(168,85,247,0.06)', border: '1px solid rgba(168,85,247,0.15)', borderRadius: '50%', width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Star size={20} style={{ opacity: 0.4, color: '#c084fc' }} />
+              </div>
+              <div className="game-details">
+                <h4 className="game-title">Cursed Seal Blueprint</h4>
+                <p className="game-desc">Full design schematics of the Heavenly Curse Marks — exclusive to elite researchers.</p>
+              </div>
+            </div>
+            <div className="locked-banner">COMING SOON</div>
+          </div>
+
+        </div>
+
+        {/* ── TIER 3 ── */}
+        <div style={{ marginBottom: 6 }}>
+          <TierBadge tier="tier3" />
+        </div>
+        <div className="games-grid">
+
+          {/* Tier 3 Item 1 — 3,500 PTS */}
+          <div className="game-card locked-card">
+            <div className="game-status locked-status">
+              <Lock size={12} />
+              <span>3,500 PTS</span>
+            </div>
+            <div className="game-card-content">
+              <div className="game-icon-container" style={{ background: 'rgba(255,215,0,0.06)', border: '1px solid rgba(255,215,0,0.15)', borderRadius: '50%', width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Crown size={20} style={{ opacity: 0.4, color: '#ffd700' }} />
+              </div>
+              <div className="game-details">
+                <h4 className="game-title">Ryuchi Cave: Final Boss Preview</h4>
+                <p className="game-desc">Classified video of the final boss encounter deep in Ryuchi Cave — legendary difficulty.</p>
+              </div>
+            </div>
+            <div className="locked-banner">COMING SOON</div>
+          </div>
+
+          {/* Tier 3 Item 2 — 8,000 PTS */}
+          <div className="game-card locked-card" style={{ borderColor: 'rgba(255,215,0,0.12)' }}>
+            <div className="game-status locked-status">
+              <Lock size={12} />
+              <span>8,000 PTS</span>
+            </div>
+            <div className="game-card-content">
+              <div className="game-icon-container" style={{ background: 'rgba(255,215,0,0.08)', border: '1px solid rgba(255,215,0,0.25)', borderRadius: '50%', width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 10px rgba(255,215,0,0.15)' }}>
+                <Crown size={20} style={{ color: '#ffd700', opacity: 0.7 }} />
+              </div>
+              <div className="game-details">
+                <h4 className="game-title">Orochimaru's True Form</h4>
+                <p className="game-desc">The rarest classified document in the Vault. Reserved only for the most dedicated Shinobi lords.</p>
+              </div>
+            </div>
+            <div className="locked-banner" style={{ background: 'linear-gradient(135deg, #ffd700, #f97316)', color: '#000', fontWeight: 900 }}>LEGENDARY — COMING SOON</div>
           </div>
 
         </div>
@@ -339,7 +469,7 @@ export function HubView({
             <strong>{orochimaruTokens.toLocaleString()} PTS</strong>
           </div>
           <div className="summary-item">
-            <span>Total Claimed</span>
+            <span>Total PTS Claimed</span>
             <span>{totalTokensClaimed.toLocaleString()}</span>
           </div>
           <div className="summary-item">

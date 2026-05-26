@@ -69,8 +69,11 @@ function App() {
             onGoToLeaderboard={() => store.setCurrentView('leaderboard')}
           />
         ) : store.currentView === 'leaderboard' ? (
-          /* Shared Ecosystem Leaderboard */
-          <LeaderboardView onExit={() => store.setCurrentView('hub')} />
+          /* Orochi Ledger — Shared Ecosystem Leaderboard */
+          <LeaderboardView
+            onExit={() => store.setCurrentView('hub')}
+            localPlayerPts={store.orochimaruTokens}
+          />
         ) : store.currentView === 'cave_trials' ? (
           /* Game V3: Ryuchi Cave Survival (Standalone) */
           <div className="game-v1-wrapper">
@@ -118,6 +121,9 @@ function App() {
                   buyUpgrade={store.buyUpgrade}
                   convertCellsToTokens={store.convertCellsToTokens}
                   clickCurseMark={store.clickCurseMark}
+                  dailyPtsEarned={store.dailyPtsEarned}
+                  dailyPtsRemaining={store.dailyPtsRemaining}
+                  dailyPtsCap={store.dailyPtsCap}
                 />
               )}
 
@@ -127,6 +133,7 @@ function App() {
                   passiveRate={store.passiveRate}
                   reanimations={store.reanimations}
                   buyReanimation={store.buyReanimation}
+                  orochimaruTokens={store.orochimaruTokens}
                 />
               )}
             </main>
