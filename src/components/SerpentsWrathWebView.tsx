@@ -26,7 +26,7 @@ const ATTACK_DEFS_SW = {
   snake_strike: { key: 'Q', label: 'Snake Strike', color: '#39ff14', cooldown: 500 },
   shadow_snake: { key: 'E', label: 'Shadow Snake', color: '#8b00ff', cooldown: 1000 },
   kusanagi: { key: 'R', label: 'Kusanagi', color: '#ffd700', cooldown: 2000 },
-  edo_tensei: { key: 'Space', label: 'Edo Tensei', color: '#ff0066', cooldown: 5000 },
+  edo_tensei: { key: 'Space', label: 'Edo Tensei', color: '#ff0066', cooldown: 12000 },
 };
 
 

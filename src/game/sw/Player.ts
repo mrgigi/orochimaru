@@ -199,7 +199,7 @@ export class Player {
       ctx.shadowBlur = 10;
 
       if (playerImg && playerImg.complete && playerImg.naturalWidth > 0) {
-        if (!facingRight) {
+        if (facingRight) {
           ctx.translate(pos.x + width, pos.y);
           ctx.scale(-1, 1);
           ctx.drawImage(playerImg, 0, 0, width, height);
@@ -220,7 +220,7 @@ export class Player {
     }
 
     if (playerImg && playerImg.complete && playerImg.naturalWidth > 0) {
-      if (!facingRight) {
+      if (facingRight) {
         ctx.translate(x + width, y);
         ctx.scale(-1, 1);
         ctx.drawImage(playerImg, 0, 0, width, height);

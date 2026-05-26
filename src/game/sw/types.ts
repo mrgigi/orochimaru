@@ -209,7 +209,7 @@ export const ATTACKS: Attack[] = [
     key: '4',
     damage: 60,
     chakraCost: 50,
-    cooldown: 5000,
+    cooldown: 12000,
     lastUsed: 0,
     range: 500,
     color: '#ff0066',
