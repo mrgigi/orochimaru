@@ -1,5 +1,5 @@
-import { GameState, EnemyType } from './types';
-import type { GameStats, Projectile, Particle, EnemyData, DyingEnemy, DeathParticle } from './types';
+import { GameState, EnemyType, DropType } from './types';
+import type { GameStats, Projectile, Particle, EnemyData, DyingEnemy, DeathParticle, FloatingText, DropItem } from './types';
 import { Player } from './Player';
 import { spawnWave, updateEnemy, drawEnemy } from './Enemy';
 import { AudioManager } from './AudioManager';
@@ -18,6 +18,15 @@ export class GameEngine {
   lastTime: number = 0;
   waveDelay: number = 0;
   waveSpawned: boolean = false;
+
+  // Visual Juice & Feedback Properties
+  floatingTexts: FloatingText[] = [];
+  dropItems: DropItem[] = [];
+  shakeIntensity: number = 0;
+  shakeDecay: number = 0.9;
+  jutsuCallout: { text: string; color: string; time: number; duration: number } | null = null;
+  private dropIdCounter = 0;
+  private textIdCounter = 0;
 
   // Images
   bgImg: HTMLImageElement | null = null;
@@ -74,6 +83,12 @@ export class GameEngine {
     if (this.gameState !== GameState.PLAYING) return;
     const key = e.key.toLowerCase();
 
+    // Dash activation
+    if (key === 'shift') {
+      e.preventDefault();
+      this.player.triggerDash(this.touchVector);
+    }
+
     // Add to movement keys (all keys tracked for movement)
     this.player.keys.add(key);
 
@@ -91,6 +106,7 @@ export class GameEngine {
         this.projectiles.push(proj);
         this.spawnAttackParticles(proj);
         this.audio.playAttackSound(attackIndex);
+        this.spawnJutsuCallout(attackIndex);
       }
     }
 
@@ -102,6 +118,7 @@ export class GameEngine {
         this.projectiles.push(proj);
         this.spawnAttackParticles(proj);
         this.audio.playAttackSound(3);
+        this.spawnJutsuCallout(3);
       } else {
         // Fallback to first available
         for (let i = 0; i < 4; i++) {
@@ -110,6 +127,7 @@ export class GameEngine {
             this.projectiles.push(proj);
             this.spawnAttackParticles(proj);
             this.audio.playAttackSound(i);
+            this.spawnJutsuCallout(i);
             break;
           }
         }
@@ -128,7 +146,63 @@ export class GameEngine {
       this.projectiles.push(proj);
       this.spawnAttackParticles(proj);
       this.audio.playAttackSound(attackIndex);
+      this.spawnJutsuCallout(attackIndex);
     }
+  }
+
+  // Visual juice generators
+  spawnJutsuCallout(attackIndex: number): void {
+    const attacksInfo = [
+      { text: 'SNAKE STRIKE', color: '#39ff14', shake: 6 },
+      { text: 'SHADOW SNAKE', color: '#8b00ff', shake: 10 },
+      { text: 'KUSANAGI SWORD', color: '#ffd700', shake: 14 },
+      { text: 'EDO TENSEI!', color: '#ff0066', shake: 28 },
+    ];
+    const info = attacksInfo[attackIndex];
+    if (info) {
+      this.shakeIntensity = info.shake;
+      this.jutsuCallout = {
+        text: info.text,
+        color: info.color,
+        time: Date.now(),
+        duration: 800,
+      };
+    }
+  }
+
+  spawnFloatingText(text: string, x: number, y: number, color: string, size: number = 16): void {
+    this.floatingTexts.push({
+      id: `text_${this.textIdCounter++}`,
+      text,
+      x,
+      y,
+      color,
+      size,
+      lifetime: 1000,
+      maxLifetime: 1000,
+    });
+  }
+
+  trySpawnDrop(x: number, y: number): void {
+    // 35% chance to drop
+    if (Math.random() > 0.35) return;
+
+    const isHealth = Math.random() > 0.5;
+    const type = isHealth ? DropType.HEALTH : DropType.CHAKRA;
+    const color = isHealth ? '#ff3333' : '#a855f7';
+    const amount = isHealth ? 20 : 35;
+
+    this.dropItems.push({
+      id: `drop_${this.dropIdCounter++}`,
+      x: x - 15,
+      y: y - 15,
+      width: 30,
+      height: 30,
+      type,
+      amount,
+      color,
+      createdAt: Date.now(),
+    });
   }
 
   spawnAttackParticles(proj: Projectile): void {
@@ -265,13 +339,17 @@ export class GameEngine {
     for (const enemy of this.enemies) {
       const result = updateEnemy(enemy, this.player.state, now);
       if (result.attacking) {
-        this.player.takeDamage(enemy.damage);
-        this.spawnHitParticles(
-          this.player.state.x + this.player.state.width / 2,
-          this.player.state.y + this.player.state.height / 2,
-          '#ff0000'
-        );
-        this.audio.playPlayerHit();
+        if (!this.player.isDashing) {
+          this.player.takeDamage(enemy.damage);
+          this.shakeIntensity = 12; // Shake camera!
+          this.spawnFloatingText(`-${enemy.damage}`, this.player.state.x + this.player.state.width / 2, this.player.state.y - 15, '#ff3333', 18);
+          this.spawnHitParticles(
+            this.player.state.x + this.player.state.width / 2,
+            this.player.state.y + this.player.state.height / 2,
+            '#ff0000'
+          );
+          this.audio.playPlayerHit();
+        }
       }
     }
 
@@ -306,6 +384,9 @@ export class GameEngine {
 
           proj.hitEnemyIds.push(enemy.id);
 
+          const isUlt = proj.attackName === 'Edo Tensei';
+          this.spawnFloatingText(`-${proj.damage}`, enemy.x + enemy.width / 2, enemy.y - 10, proj.color, isUlt ? 22 : 16);
+
           // If it's not a piercing attack, destroy the projectile
           const isPiercing = proj.attackName === 'Kusanagi' || proj.attackName === 'Edo Tensei';
           if (!isPiercing) {
@@ -320,6 +401,7 @@ export class GameEngine {
     const deadEnemies = this.enemies.filter(e => e.hp <= 0);
     for (const dead of deadEnemies) {
       this.spawnDeathAnimation(dead);
+      this.trySpawnDrop(dead.x + dead.width / 2, dead.y + dead.height - 10);
     }
     this.enemies = this.enemies.filter(e => e.hp > 0);
     const killed = deadEnemies.length;
@@ -372,12 +454,40 @@ export class GameEngine {
       return;
     }
 
-    // Update particles
-    this.particles = this.particles.filter(p => {
-      p.x += p.vx;
-      p.y += p.vy;
-      p.life--;
-      return p.life > 0;
+    // Decay camera shake
+    if (this.shakeIntensity > 0) {
+      this.shakeIntensity *= this.shakeDecay;
+    }
+
+    // Update drop items
+    this.dropItems = this.dropItems.filter(item => {
+      if (now - item.createdAt > 10000) return false;
+
+      const p = this.player.state;
+      if (
+        item.x < p.x + p.width &&
+        item.x + item.width > p.x &&
+        item.y < p.y + p.height &&
+        item.y + item.height > p.y
+      ) {
+        if (item.type === DropType.HEALTH) {
+          this.player.state.hp = Math.min(this.player.state.maxHp, this.player.state.hp + item.amount);
+          this.spawnFloatingText(`+${item.amount} HP`, p.x + p.width / 2, p.y - 15, '#00ff41', 18);
+        } else {
+          this.player.state.chakra = Math.min(this.player.state.maxChakra, this.player.state.chakra + item.amount);
+          this.spawnFloatingText(`+${item.amount} CK`, p.x + p.width / 2, p.y - 15, '#a855f7', 18);
+        }
+        this.audio.playEnemyHit(); // Play sound
+        return false;
+      }
+      return true;
+    });
+
+    // Update floating texts
+    this.floatingTexts = this.floatingTexts.filter(text => {
+      text.y -= 0.8;
+      text.lifetime -= 16;
+      return text.lifetime > 0;
     });
 
     // Update dying enemies
@@ -430,22 +540,89 @@ export class GameEngine {
   draw(): void {
     const { ctx, canvas } = this;
 
+    // Apply Screen Shake camera translation offset
+    ctx.save();
+    if (this.shakeIntensity > 0.5) {
+      const dx = (Math.random() - 0.5) * this.shakeIntensity;
+      const dy = (Math.random() - 0.5) * this.shakeIntensity;
+      ctx.translate(dx, dy);
+    }
+
     // Background
     if (this.bgImg && this.bgImg.complete && this.bgImg.naturalWidth > 0) {
       ctx.drawImage(this.bgImg, 0, 0, canvas.width, canvas.height);
     } else {
-      // Fallback gradient background
+      // Atmospheric Laboratory Stone Floor / Walls Gradient
       const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-      gradient.addColorStop(0, '#0a0a0a');
-      gradient.addColorStop(0.5, '#1a0a2e');
-      gradient.addColorStop(1, '#0d1117');
+      gradient.addColorStop(0, '#05040a');
+      gradient.addColorStop(0.3, '#100a20');
+      gradient.addColorStop(0.7, '#1b0d2b');
+      gradient.addColorStop(1, '#08050c');
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Draw stylized stone floor grid in the playable walking area
+      const playAreaStartY = canvas.height * 0.3;
+      ctx.strokeStyle = '#281a42';
+      ctx.lineWidth = 1.5;
+      const tileW = 90;
+      const tileH = 45;
+
+      for (let y = playAreaStartY; y < canvas.height; y += tileH) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(canvas.width, y);
+        ctx.stroke();
+
+        const offset = (Math.floor((y - playAreaStartY) / tileH) % 2 === 0) ? 0 : tileW / 2;
+        for (let x = -offset; x < canvas.width + tileW; x += tileW) {
+          ctx.beginPath();
+          ctx.moveTo(x, y);
+          ctx.lineTo(x, y + tileH);
+          ctx.stroke();
+        }
+      }
     }
 
-    // Ground
-    ctx.fillStyle = '#1a0a2e';
+    // Ground line border
+    ctx.fillStyle = '#22113d';
     ctx.fillRect(0, canvas.height - 20, canvas.width, 20);
+
+    // Draw drop items
+    for (const item of this.dropItems) {
+      ctx.save();
+      const pulse = Math.sin((Date.now() - item.createdAt) * 0.007) * 0.15 + 0.85;
+      ctx.shadowColor = item.color;
+      ctx.shadowBlur = 12 * pulse;
+      ctx.fillStyle = item.color;
+
+      ctx.translate(item.x + item.width / 2, item.y + item.height / 2);
+      ctx.scale(pulse, pulse);
+
+      if (item.type === DropType.HEALTH) {
+        // Red diamond representing health elixir
+        ctx.beginPath();
+        ctx.moveTo(0, -item.height / 2);
+        ctx.lineTo(item.width / 2, 0);
+        ctx.lineTo(0, item.height / 2);
+        ctx.lineTo(-item.width / 2, 0);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(-2, -6, 4, 12);
+        ctx.fillRect(-6, -2, 12, 4);
+      } else {
+        // Glowing purple orb representing chakra scroll
+        ctx.beginPath();
+        ctx.arc(0, 0, item.width / 2 - 2, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#ffd700';
+        ctx.fillRect(-3, -item.height / 2 + 3, 6, item.height - 6);
+      }
+      ctx.restore();
+    }
 
     // Draw enemies
     for (const enemy of this.enemies) {
@@ -457,7 +634,6 @@ export class GameEngine {
       const elapsed = Date.now() - de.deathTime;
       const progress = Math.min(elapsed / de.duration, 1);
 
-      // Fading ghost of the enemy body
       if (progress < 0.5) {
         ctx.save();
         ctx.globalAlpha = 1 - progress * 2;
@@ -473,7 +649,6 @@ export class GameEngine {
         ctx.restore();
       }
 
-      // Draw death particles
       for (const p of de.particles) {
         ctx.save();
         const alpha = p.life / p.maxLife;
@@ -484,7 +659,6 @@ export class GameEngine {
         ctx.shadowColor = p.color;
         ctx.shadowBlur = 6;
 
-        // Draw as small squares/shards for dissolve effect
         const size = p.size * (0.5 + alpha * 0.5);
         ctx.fillRect(-size / 2, -size / 2, size, size);
         ctx.restore();
@@ -498,7 +672,6 @@ export class GameEngine {
       ctx.shadowBlur = 15;
       ctx.fillStyle = proj.color;
 
-      // Different shapes based on attack
       if (proj.attackName === 'Kusanagi') {
         ctx.fillRect(proj.x, proj.y, proj.width, proj.height * 0.4);
       } else if (proj.attackName === 'Edo Tensei') {
@@ -506,7 +679,6 @@ export class GameEngine {
         ctx.arc(proj.x + proj.width / 2, proj.y, proj.height, 0, Math.PI * 2);
         ctx.fill();
       } else {
-        // Snake-like projectile
         ctx.beginPath();
         ctx.moveTo(proj.x, proj.y);
         ctx.quadraticCurveTo(
@@ -541,6 +713,44 @@ export class GameEngine {
 
     // Draw player
     this.player.draw(ctx, this.playerImg);
+
+    // Draw floating damage numbers
+    for (const text of this.floatingTexts) {
+      ctx.save();
+      const alpha = text.lifetime / text.maxLifetime;
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = text.color;
+      ctx.font = `bold ${text.size}px Impact, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 3;
+      ctx.strokeText(text.text, text.x, text.y);
+      ctx.fillText(text.text, text.x, text.y);
+      ctx.restore();
+    }
+
+    // Draw Jutsu Callout popups
+    if (this.jutsuCallout) {
+      const elapsed = Date.now() - this.jutsuCallout.time;
+      if (elapsed > this.jutsuCallout.duration) {
+        this.jutsuCallout = null;
+      } else {
+        ctx.save();
+        const alpha = Math.min(1, (this.jutsuCallout.duration - elapsed) / 200);
+        ctx.globalAlpha = alpha;
+        ctx.textAlign = 'center';
+        ctx.fillStyle = this.jutsuCallout.color;
+        ctx.font = 'bold italic 30px Impact, sans-serif';
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 4;
+        ctx.strokeText(this.jutsuCallout.text, canvas.width / 2, canvas.height * 0.22);
+        ctx.fillText(this.jutsuCallout.text, canvas.width / 2, canvas.height * 0.22);
+        ctx.restore();
+      }
+    }
+
+    // Restore screen shake offsets
+    ctx.restore();
   }
 
   resize(width: number, height: number): void {

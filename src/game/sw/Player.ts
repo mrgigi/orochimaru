@@ -9,6 +9,14 @@ export class Player {
   keys: Set<string> = new Set();
   private projectileIdCounter = 0;
 
+  // Dash properties
+  isDashing: boolean = false;
+  dashDuration: number = 0;
+  dashCooldown: number = 1500;
+  lastDash: number = 0;
+  dashDirection: { x: number; y: number } = { x: 0, y: 0 };
+  dashTrail: { x: number; y: number }[] = [];
+
   constructor(_canvasWidth: number, canvasHeight: number) {
     this.state = {
       x: 100,
@@ -26,33 +34,97 @@ export class Player {
     this.attacks = ATTACKS.map(a => ({ ...a }));
   }
 
-  update(canvasWidth: number, canvasHeight: number, touchVector?: { x: number; y: number } | null): void {
-    if (touchVector) {
-      this.state.x += touchVector.x * this.speed;
-      this.state.y += touchVector.y * this.speed;
-      if (touchVector.x !== 0) {
-        this.state.facingRight = touchVector.x > 0;
-      }
+  triggerDash(touchVector?: { x: number; y: number } | null): boolean {
+    const now = Date.now();
+    if (now - this.lastDash < this.dashCooldown) return false;
+    if (this.isDashing) return false;
+
+    let dx = 0;
+    let dy = 0;
+
+    if (touchVector && (touchVector.x !== 0 || touchVector.y !== 0)) {
+      const len = Math.hypot(touchVector.x, touchVector.y);
+      dx = touchVector.x / len;
+      dy = touchVector.y / len;
     } else {
-      // Movement - ONLY arrow keys and WASD for movement (not attack keys)
       const moveLeft = this.keys.has('arrowleft') || this.keys.has('a');
       const moveRight = this.keys.has('arrowright') || this.keys.has('d');
       const moveUp = this.keys.has('arrowup') || this.keys.has('w');
       const moveDown = this.keys.has('arrowdown') || this.keys.has('s');
 
-      if (moveLeft) {
-        this.state.x -= this.speed;
-        this.state.facingRight = false;
+      if (moveLeft) dx = -1;
+      else if (moveRight) dx = 1;
+
+      if (moveUp) dy = -1;
+      else if (moveDown) dy = 1;
+
+      if (dx === 0 && dy === 0) {
+        dx = this.state.facingRight ? 1 : -1;
       }
-      if (moveRight) {
-        this.state.x += this.speed;
-        this.state.facingRight = true;
+
+      if (dx !== 0 && dy !== 0) {
+        const len = Math.hypot(dx, dy);
+        dx /= len;
+        dy /= len;
       }
-      if (moveUp) {
-        this.state.y -= this.speed;
+    }
+
+    this.isDashing = true;
+    this.dashDuration = 10; // Dash lasts 10 frames
+    this.lastDash = now;
+    this.dashDirection = { x: dx, y: dy };
+    this.dashTrail = [];
+    return true;
+  }
+
+  update(canvasWidth: number, canvasHeight: number, touchVector?: { x: number; y: number } | null): void {
+    if (this.isDashing) {
+      // Dash physics (3.5x normal speed)
+      this.state.x += this.dashDirection.x * this.speed * 3.5;
+      this.state.y += this.dashDirection.y * this.speed * 3.5;
+      this.dashDuration--;
+
+      // Append current position to trail
+      this.dashTrail.push({ x: this.state.x, y: this.state.y });
+      if (this.dashTrail.length > 5) {
+        this.dashTrail.shift();
       }
-      if (moveDown) {
-        this.state.y += this.speed;
+
+      if (this.dashDuration <= 0) {
+        this.isDashing = false;
+      }
+    } else {
+      // Decay trail slowly
+      if (this.dashTrail.length > 0) {
+        this.dashTrail.shift();
+      }
+
+      if (touchVector) {
+        this.state.x += touchVector.x * this.speed;
+        this.state.y += touchVector.y * this.speed;
+        if (touchVector.x !== 0) {
+          this.state.facingRight = touchVector.x > 0;
+        }
+      } else {
+        const moveLeft = this.keys.has('arrowleft') || this.keys.has('a');
+        const moveRight = this.keys.has('arrowright') || this.keys.has('d');
+        const moveUp = this.keys.has('arrowup') || this.keys.has('w');
+        const moveDown = this.keys.has('arrowdown') || this.keys.has('s');
+
+        if (moveLeft) {
+          this.state.x -= this.speed;
+          this.state.facingRight = false;
+        }
+        if (moveRight) {
+          this.state.x += this.speed;
+          this.state.facingRight = true;
+        }
+        if (moveUp) {
+          this.state.y -= this.speed;
+        }
+        if (moveDown) {
+          this.state.y += this.speed;
+        }
       }
     }
 
@@ -104,6 +176,9 @@ export class Player {
   }
 
   takeDamage(damage: number): void {
+    // Cannot take damage while dashing (invincibility frames)
+    if (this.isDashing) return;
+
     this.state.hp -= damage;
     this.state.isHit = true;
     this.state.hitTime = Date.now();
@@ -112,6 +187,31 @@ export class Player {
 
   draw(ctx: CanvasRenderingContext2D, playerImg: HTMLImageElement | null): void {
     const { x, y, width, height, isHit, facingRight } = this.state;
+
+    // Draw dash ghost trails
+    this.dashTrail.forEach((pos, idx) => {
+      const alpha = ((idx + 1) / (this.dashTrail.length + 1)) * 0.25;
+      ctx.save();
+      ctx.globalAlpha = alpha;
+
+      // Draw shadow glow for trail
+      ctx.shadowColor = '#8b00ff';
+      ctx.shadowBlur = 10;
+
+      if (playerImg && playerImg.complete && playerImg.naturalWidth > 0) {
+        if (!facingRight) {
+          ctx.translate(pos.x + width, pos.y);
+          ctx.scale(-1, 1);
+          ctx.drawImage(playerImg, 0, 0, width, height);
+        } else {
+          ctx.drawImage(playerImg, pos.x, pos.y, width, height);
+        }
+      } else {
+        ctx.fillStyle = '#8b00ff';
+        ctx.fillRect(pos.x, pos.y, width, height);
+      }
+      ctx.restore();
+    });
 
     ctx.save();
 

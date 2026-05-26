@@ -59,36 +59,50 @@ export function updateEnemy(enemy: EnemyData, player: PlayerState, now: number):
   const dy = player.y - enemy.y;
   const dist = Math.sqrt(dx * dx + dy * dy);
 
-  // Boss has special movement patterns
-  if (enemy.type === EnemyType.KAGE) {
-    const attackRange = 100;
-    if (dist > attackRange) {
-      enemy.x += (dx / dist) * enemy.speed;
-      enemy.y += (dy / dist) * enemy.speed * 0.3;
-    } else {
-      // Boss oscillates slightly when in range
-      enemy.x += Math.sin(now * 0.003) * 1.5;
-      enemy.y += Math.cos(now * 0.002) * 0.8;
+  let attacking = false;
+
+  // Initialize warning properties if they don't exist
+  if (enemy.isWarning === undefined) enemy.isWarning = false;
+  if (enemy.warningTime === undefined) enemy.warningTime = 0;
+  if (enemy.warningDuration === undefined) enemy.warningDuration = 0;
+
+  if (enemy.isWarning) {
+    // Enemy pauses to warning/charge attack
+    if (now - enemy.warningTime >= enemy.warningDuration) {
+      attacking = true;
+      enemy.isWarning = false;
+      enemy.lastAttack = now;
     }
   } else {
-    // Regular enemies move toward player
-    if (dist > 60) {
-      enemy.x += (dx / dist) * enemy.speed;
-      enemy.y += (dy / dist) * enemy.speed * 0.5;
+    // Movement
+    if (enemy.type === EnemyType.KAGE) {
+      const attackRange = 100;
+      if (dist > attackRange) {
+        enemy.x += (dx / dist) * enemy.speed;
+        enemy.y += (dy / dist) * enemy.speed * 0.3;
+      } else {
+        enemy.x += Math.sin(now * 0.003) * 1.5;
+        enemy.y += Math.cos(now * 0.002) * 0.8;
+      }
+    } else {
+      if (dist > 60) {
+        enemy.x += (dx / dist) * enemy.speed;
+        enemy.y += (dy / dist) * enemy.speed * 0.5;
+      }
+    }
+
+    // Trigger warning tell if in range and cooldown has finished
+    const attackDist = enemy.type === EnemyType.KAGE ? 120 : 70;
+    if (dist < attackDist && now - enemy.lastAttack > enemy.attackCooldown) {
+      enemy.isWarning = true;
+      enemy.warningTime = now;
+      enemy.warningDuration = 400; // 400ms tell before damage occurs
     }
   }
 
   // Reset hit flash
   if (enemy.isHit && now - enemy.hitTime > 150) {
     enemy.isHit = false;
-  }
-
-  // Attack if close enough
-  let attacking = false;
-  const attackDist = enemy.type === EnemyType.KAGE ? 120 : 70;
-  if (dist < attackDist && now - enemy.lastAttack > enemy.attackCooldown) {
-    enemy.lastAttack = now;
-    attacking = true;
   }
 
   return { attacking };
@@ -99,7 +113,7 @@ export function drawEnemy(
   enemy: EnemyData,
   enemyImg: HTMLImageElement | null
 ): void {
-  const { x, y, width, height, isHit, hp, maxHp, type, color } = enemy;
+  const { x, y, width, height, isHit, hp, maxHp, type, color, isWarning } = enemy;
 
   ctx.save();
 
@@ -107,9 +121,24 @@ export function drawEnemy(
     ctx.globalAlpha = 0.6;
   }
 
+  if (isWarning) {
+    const flash = Math.sin(Date.now() * 0.02) * 0.25 + 0.75;
+    ctx.shadowColor = '#ff0000';
+    ctx.shadowBlur = 15 * flash;
+  }
+
   // Boss has unique drawing
   if (type === EnemyType.KAGE) {
     drawBoss(ctx, enemy);
+    if (isWarning) {
+      // Draw big warning indicator for boss
+      ctx.fillStyle = '#ff1111';
+      ctx.font = 'bold 30px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.shadowColor = '#ff0000';
+      ctx.shadowBlur = 15;
+      ctx.fillText('⚠️', x + width / 2, y - 25);
+    }
     ctx.restore();
     return;
   }
@@ -146,6 +175,15 @@ export function drawEnemy(
   ctx.fillRect(x, y - 10, hpBarWidth, 5);
   ctx.fillStyle = hpRatio > 0.5 ? '#00ff41' : hpRatio > 0.25 ? '#ffaa00' : '#ff0000';
   ctx.fillRect(x, y - 10, hpBarWidth * hpRatio, 5);
+
+  if (isWarning) {
+    ctx.fillStyle = '#ff1111';
+    ctx.font = 'bold 20px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.shadowColor = '#ff0000';
+    ctx.shadowBlur = 10;
+    ctx.fillText('!', x + width / 2, y - 20);
+  }
 
   ctx.restore();
 }

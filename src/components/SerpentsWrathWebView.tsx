@@ -69,6 +69,23 @@ export function SerpentsWrathWebView({ onExit, onGoToLeaderboard }: SerpentsWrat
   const [finalKills, setFinalKills] = useState(0);
   const [finalWaves, setFinalWaves] = useState(0);
   const [topScores, setTopScores] = useState<{name: string, score: number, waves: number}[]>([]);
+  const [swHighScore, setSwHighScore] = useState(0);
+
+  // Leaderboard and high score reset
+  useEffect(() => {
+    const isReset = localStorage.getItem('orochimaru_leaderboard_reset_v3');
+    if (!isReset) {
+      const defaultLeaderboard = [
+        { id: '1', name: 'SerpentKing', score: 8500, waves: 7, platform: 'web', timestamp: Date.now() },
+        { id: '2', name: 'NinjaSlayer', score: 7200, waves: 7, platform: 'web', timestamp: Date.now() },
+        { id: '3', name: 'SnakeMaster', score: 6100, waves: 6, platform: 'web', timestamp: Date.now() },
+        { id: '4', name: 'ShadowViper', score: 5400, waves: 5, platform: 'web', timestamp: Date.now() },
+      ];
+      localStorage.setItem('orochimaru_leaderboard', JSON.stringify(defaultLeaderboard));
+      localStorage.setItem('orochimaru_highscore', '0');
+      localStorage.setItem('orochimaru_leaderboard_reset_v3', 'true');
+    }
+  }, []);
 
   useEffect(() => {
     try {
@@ -91,6 +108,13 @@ export function SerpentsWrathWebView({ onExit, onGoToLeaderboard }: SerpentsWrat
         { name: 'SnakeMaster', score: 6100, waves: 6 },
         { name: 'ShadowViper', score: 5400, waves: 5 },
       ]);
+    }
+
+    const hs = localStorage.getItem('orochimaru_highscore');
+    if (hs) {
+      setSwHighScore(parseInt(hs, 10));
+    } else {
+      setSwHighScore(0);
     }
   }, [screen]);
 
@@ -336,7 +360,7 @@ export function SerpentsWrathWebView({ onExit, onGoToLeaderboard }: SerpentsWrat
 
               {/* High Score */}
               <div className="sw-start-highscore">
-                🏆 High Score: {store.combatHighScore.toLocaleString()}
+                🏆 High Score: {swHighScore.toLocaleString()}
               </div>
 
               {/* Global Leaderboard Mini Table */}

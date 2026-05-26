@@ -72,6 +72,35 @@ export interface DeathParticle {
   rotationSpeed: number;
 }
 
+export interface FloatingText {
+  id: string;
+  text: string;
+  x: number;
+  y: number;
+  color: string;
+  size: number;
+  lifetime: number;
+  maxLifetime: number;
+}
+
+export const DropType = {
+  HEALTH: 'health',
+  CHAKRA: 'chakra',
+} as const;
+export type DropType = typeof DropType[keyof typeof DropType];
+
+export interface DropItem {
+  id: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  type: DropType;
+  amount: number;
+  color: string;
+  createdAt: number;
+}
+
 export interface EnemyData {
   id: string;
   x: number;
@@ -88,6 +117,9 @@ export interface EnemyData {
   color: string;
   isHit: boolean;
   hitTime: number;
+  isWarning?: boolean;
+  warningTime?: number;
+  warningDuration?: number;
 }
 
 export const EnemyType = {
