@@ -187,10 +187,9 @@ export class GameEngine {
     // 35% chance to drop
     if (Math.random() > 0.35) return;
 
-    const isHealth = Math.random() > 0.5;
-    const type = isHealth ? DropType.HEALTH : DropType.CHAKRA;
-    const color = isHealth ? '#ff3333' : '#a855f7';
-    const amount = isHealth ? 20 : 35;
+    const type = DropType.HEALTH;
+    const color = '#ff3333';
+    const amount = 20;
 
     this.dropItems.push({
       id: `drop_${this.dropIdCounter++}`,
