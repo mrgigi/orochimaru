@@ -285,7 +285,13 @@ export class GameEngine {
 
     // Collision: projectiles vs enemies
     for (const proj of this.projectiles) {
+      if (!proj.hitEnemyIds) {
+        proj.hitEnemyIds = [];
+      }
       for (const enemy of this.enemies) {
+        // Skip if this enemy has already been hit by this projectile
+        if (proj.hitEnemyIds.includes(enemy.id)) continue;
+
         if (
           proj.x < enemy.x + enemy.width &&
           proj.x + proj.width > enemy.x &&
@@ -297,7 +303,15 @@ export class GameEngine {
           enemy.hitTime = now;
           this.spawnHitParticles(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, proj.color);
           this.audio.playEnemyHit();
-          proj.lifetime = 0; // Remove projectile
+
+          proj.hitEnemyIds.push(enemy.id);
+
+          // If it's not a piercing attack, destroy the projectile
+          const isPiercing = proj.attackName === 'Kusanagi' || proj.attackName === 'Edo Tensei';
+          if (!isPiercing) {
+            proj.lifetime = 0; // Remove projectile
+            break; // Stop checking other enemies for this projectile
+          }
         }
       }
     }

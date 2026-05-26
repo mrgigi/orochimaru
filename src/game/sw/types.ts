@@ -33,6 +33,7 @@ export interface Projectile {
   attackName: string;
   lifetime: number;
   createdAt: number;
+  hitEnemyIds?: string[];
 }
 
 export interface Particle {

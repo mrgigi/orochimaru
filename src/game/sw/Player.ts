@@ -80,20 +80,24 @@ export class Player {
     attack.lastUsed = now;
     this.state.chakra -= attack.chakraCost;
 
-    // Projectiles always shoot to the RIGHT (toward enemies)
-    // since enemies come from the right side
+    const facingRight = this.state.facingRight;
+    const projWidth = attack.range * 0.4;
+    const speed = facingRight ? 14 : -14;
+    const x = facingRight ? this.state.x + this.state.width : this.state.x - projWidth;
+
     const projectile: Projectile = {
       id: `proj_${this.projectileIdCounter++}`,
-      x: this.state.x + this.state.width,
+      x,
       y: this.state.y + this.state.height / 2 - 10,
-      width: attack.range * 0.4,
+      width: projWidth,
       height: 24,
-      speed: 14,
+      speed,
       damage: attack.damage,
       color: attack.color,
       attackName: attack.name,
       lifetime: 3000,
       createdAt: now,
+      hitEnemyIds: [],
     };
 
     return projectile;
