@@ -70,6 +70,15 @@ export function HubView({
     <div className="hub-container">
       {/* Header Banner Section */}
       <header className="hub-header">
+        {/* Background Video */}
+        <video 
+          src="/assets/trailer.mp4" 
+          autoPlay 
+          loop 
+          muted 
+          playsInline 
+          className="header-bg-video"
+        />
         <div className="header-top-bar">
           <div className="token-badge">$OROCHIMARU</div>
           <div className="header-top-actions">
@@ -209,6 +218,27 @@ export function HubView({
             <div className="locked-banner">COMING SOON</div>
           </div>
 
+        </div>
+      </section>
+
+      {/* Featured Gameplay Trailer Showcase */}
+      <section className="showcase-section">
+        <h3 className="section-title">GAMEPLAY SHOWCASE</h3>
+        <div className="showcase-video-card">
+          <div className="video-player-wrapper">
+            <video 
+              src="/assets/trailer.mp4" 
+              controls 
+              className="showcase-video"
+              playsInline
+            />
+          </div>
+          <div className="showcase-info">
+            <h4>Serpent Fury - Official Gameplay Showcase</h4>
+            <p>
+              Unlock the forbidden reanimations! Evade attacks with dynamic invincibility dashes, strike surrounding enemies with a 360-degree expanding Edo Tensei shockwave dome, and climb the live global database ranking scroll.
+            </p>
+          </div>
         </div>
       </section>
 

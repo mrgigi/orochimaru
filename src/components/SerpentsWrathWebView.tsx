@@ -14,6 +14,7 @@ import { GameState } from '../game/sw/types';
 import { synth } from '../audio/SynthManager';
 import orochimaruFace from '../assets/orochimaru_face.png';
 import { useGameStore } from '../hooks/useGameStore';
+import { supabase } from '../lib/supabaseClient';
 
 type ScreenState = 'start' | 'playing' | 'gameover' | 'victory';
 
@@ -82,14 +83,43 @@ export function SerpentsWrathWebView({ onExit, onGoToLeaderboard }: SerpentsWrat
   }, []);
 
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem('orochimaru_leaderboard');
-      let list = saved ? JSON.parse(saved) : [];
-      list.sort((a: any, b: any) => b.score - a.score);
-      setTopScores(list.slice(0, 4));
-    } catch {
-      setTopScores([]);
+    async function loadMenuScores() {
+      try {
+        const { data, error } = await supabase
+          .from('leaderboard')
+          .select('*')
+          .order('score', { ascending: false })
+          .limit(4);
+
+        if (error) throw error;
+
+        if (data) {
+          setTopScores(data.map(item => ({
+            name: item.name,
+            score: item.score,
+            waves: item.waves
+          })));
+        } else {
+          setTopScores([]);
+        }
+      } catch (err) {
+        console.warn('Failed to fetch menu high scores from Supabase:', err);
+        // Fallback to local cache
+        try {
+          const saved = localStorage.getItem('orochimaru_leaderboard');
+          const list = saved ? JSON.parse(saved) : [];
+          list.sort((a: any, b: any) => b.score - a.score);
+          setTopScores(list.slice(0, 4).map((item: any) => ({
+            name: item.name,
+            score: item.score,
+            waves: item.waves
+          })));
+        } catch {
+          setTopScores([]);
+        }
+      }
     }
+    loadMenuScores();
 
     const hs = localStorage.getItem('orochimaru_highscore');
     if (hs) {
@@ -253,40 +283,65 @@ export function SerpentsWrathWebView({ onExit, onGoToLeaderboard }: SerpentsWrat
     return () => { engineRef.current?.cleanup(); };
   }, []);
 
-  const submitScore = (e: React.FormEvent) => {
+  const submitScore = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!playerName.trim() || !playerEmail.trim() || !playerWallet.trim() || scoreSubmitted) return;
 
     try {
+      setScoreSubmitted(true);
+      
+      // Save local profile defaults for convenience
       localStorage.setItem('orochimaru_player_name', playerName.trim());
       localStorage.setItem('orochimaru_player_email', playerEmail.trim());
       localStorage.setItem('orochimaru_player_wallet', playerWallet.trim());
       localStorage.setItem('orochimaru_player_country', playerCountry);
 
-      const saved = localStorage.getItem('orochimaru_leaderboard');
-      const leaderboard = saved ? JSON.parse(saved) : [];
-      
-      const newEntry = {
-        id: Math.random().toString(36).substring(2, 9),
+      // Insert into Supabase database
+      const { error } = await supabase.from('leaderboard').insert({
         name: playerName.trim(),
         score: finalScore,
         kills: finalKills,
         waves: finalWaves,
         platform: 'web',
-        timestamp: Date.now(),
         email: playerEmail.trim(),
-        walletAddress: playerWallet.trim(),
+        wallet_address: playerWallet.trim(),
         country: playerCountry
-      };
+      });
 
-      leaderboard.push(newEntry);
-      localStorage.setItem('orochimaru_leaderboard', JSON.stringify(leaderboard));
-      setScoreSubmitted(true);
+      if (error) throw error;
       
+      // Fetch current board, update local cache
+      try {
+        const { data } = await supabase
+          .from('leaderboard')
+          .select('*')
+          .order('score', { ascending: false })
+          .limit(100);
+        if (data) {
+          const mapped = data.map(item => ({
+            id: item.id,
+            name: item.name,
+            score: item.score,
+            kills: item.kills,
+            waves: item.waves,
+            platform: item.platform,
+            timestamp: new Date(item.created_at).getTime(),
+            email: item.email,
+            walletAddress: item.wallet_address,
+            country: item.country
+          }));
+          localStorage.setItem('orochimaru_leaderboard', JSON.stringify(mapped));
+        }
+      } catch (cacheErr) {
+        console.warn('Failed to update local cache:', cacheErr);
+      }
+
       synth.playClick();
       onGoToLeaderboard();
     } catch (err) {
-      console.error('Failed to submit score:', err);
+      console.error('Failed to submit score to Supabase:', err);
+      setScoreSubmitted(false);
+      alert('Failed to submit score. Please check your internet connection and try again.');
     }
   };
 

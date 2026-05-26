@@ -9,6 +9,7 @@ import {
   Calendar
 } from 'lucide-react';
 import { synth } from '../audio/SynthManager';
+import { supabase } from '../lib/supabaseClient';
 
 interface LeaderboardEntry {
   id: string;
@@ -78,31 +79,74 @@ export function LeaderboardView({ onExit }: LeaderboardViewProps) {
   const [filter, setFilter] = useState<'all' | 'web' | 'mobile'>('all');
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Load entries from localStorage on mount
+  // Load entries from Supabase on mount
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem('orochimaru_leaderboard');
-      if (saved) {
-        setEntries(JSON.parse(saved));
-      } else {
-        // Populate default mock data if empty to show styling
-        const mockData: LeaderboardEntry[] = [
-          { id: '1', name: 'Kabuto_Yakushi', score: 75000, kills: 142, waves: 6, platform: 'web', timestamp: Date.now() - 3600000 * 2, email: 'kabuto@orochimaru.org', walletAddress: '0x71C229712aB297a7e8e50bB41A284E29037c89E1', country: 'JP' },
-          { id: '2', name: 'Kimimaro_K', score: 62000, kills: 118, waves: 5, platform: 'mobile', timestamp: Date.now() - 3600000 * 5, email: 'kimimaro@kaguya.net', walletAddress: '0x3aC9e28e8e89E197a7e8e50bB41A284E29037c89e5', country: 'CN' },
-          { id: '3', name: 'Sasuke_Uchiha', score: 58000, kills: 105, waves: 5, platform: 'web', timestamp: Date.now() - 3600000 * 12, email: 'sasuke@uchiha.com', walletAddress: '0x8bD15A412aB297a7e8e50bB41A284E29037c89E1', country: 'JP' },
-          { id: '4', name: 'Tayuya_Flute', score: 32000, kills: 64, waves: 3, platform: 'mobile', timestamp: Date.now() - 3600000 * 24, email: 'tayuya@sound4.org', walletAddress: '0xF6b46Cd12aB297a7e8e50bB41A284E29037c89E1', country: 'DE' },
-          { id: '5', name: 'Sakon_Ukon', score: 28000, kills: 58, waves: 3, platform: 'web', timestamp: Date.now() - 3600000 * 48, email: 'sakon@sound4.org', walletAddress: '0x9e2079512aB297a7e8e50bB41A284E29037c89E1', country: 'IT' }
-        ];
-        localStorage.setItem('orochimaru_leaderboard', JSON.stringify(mockData));
-        setEntries(mockData);
+    async function loadData() {
+      try {
+        const { data, error } = await supabase
+          .from('leaderboard')
+          .select('*')
+          .order('score', { ascending: false })
+          .limit(100);
+
+        if (error) throw error;
+
+        if (data && data.length > 0) {
+          // Map database snake_case columns to camelCase properties
+          const mapped: LeaderboardEntry[] = data.map(item => ({
+            id: item.id,
+            name: item.name,
+            score: item.score,
+            kills: item.kills,
+            waves: item.waves,
+            platform: item.platform as 'web' | 'mobile',
+            timestamp: new Date(item.created_at).getTime(),
+            email: item.email,
+            walletAddress: item.wallet_address,
+            country: item.country
+          }));
+          setEntries(mapped);
+          localStorage.setItem('orochimaru_leaderboard', JSON.stringify(mapped));
+        } else {
+          // Populate default mock data if database is empty
+          const mockData: LeaderboardEntry[] = [
+            { id: '1', name: 'Kabuto_Yakushi', score: 75000, kills: 142, waves: 6, platform: 'web', timestamp: Date.now() - 3600000 * 2, email: 'kabuto@orochimaru.org', walletAddress: '0x71C229712aB297a7e8e50bB41A284E29037c89E1', country: 'JP' },
+            { id: '2', name: 'Kimimaro_K', score: 62000, kills: 118, waves: 5, platform: 'mobile', timestamp: Date.now() - 3600000 * 5, email: 'kimimaro@kaguya.net', walletAddress: '0x3aC9e28e8e89E197a7e8e50bB41A284E29037c89e5', country: 'CN' },
+            { id: '3', name: 'Sasuke_Uchiha', score: 58000, kills: 105, waves: 5, platform: 'web', timestamp: Date.now() - 3600000 * 12, email: 'sasuke@uchiha.com', walletAddress: '0x8bD15A412aB297a7e8e50bB41A284E29037c89E1', country: 'JP' },
+            { id: '4', name: 'Tayuya_Flute', score: 32000, kills: 64, waves: 3, platform: 'mobile', timestamp: Date.now() - 3600000 * 24, email: 'tayuya@sound4.org', walletAddress: '0xF6b46Cd12aB297a7e8e50bB41A284E29037c89E1', country: 'DE' },
+            { id: '5', name: 'Sakon_Ukon', score: 28000, kills: 58, waves: 3, platform: 'web', timestamp: Date.now() - 3600000 * 48, email: 'sakon@sound4.org', walletAddress: '0x9e2079512aB297a7e8e50bB41A284E29037c89E1', country: 'IT' }
+          ];
+
+          // Asynchronously attempt to seed database so it is ready
+          for (const item of mockData) {
+            await supabase.from('leaderboard').insert({
+              name: item.name,
+              score: item.score,
+              kills: item.kills,
+              waves: item.waves,
+              platform: item.platform,
+              email: item.email || '',
+              wallet_address: item.walletAddress || '',
+              country: item.country || 'US'
+            });
+          }
+
+          setEntries(mockData);
+          localStorage.setItem('orochimaru_leaderboard', JSON.stringify(mockData));
+        }
+      } catch (err) {
+        console.warn('Failed to load from Supabase, loading localStorage cache:', err);
+        const saved = localStorage.getItem('orochimaru_leaderboard');
+        if (saved) {
+          setEntries(JSON.parse(saved));
+        }
       }
-    } catch (e) {
-      console.error('Failed to load leaderboard:', e);
     }
+    loadData();
   }, []);
 
   const handleClearLeaderboard = () => {
-    if (window.confirm("Are you sure you want to clear all rankings in the scroll? This cannot be undone.")) {
+    if (window.confirm("Are you sure you want to clear your local scroll view? (Note: Global database records are protected and cannot be deleted by public clients).")) {
       synth.playSnake();
       localStorage.removeItem('orochimaru_leaderboard');
       setEntries([]);
