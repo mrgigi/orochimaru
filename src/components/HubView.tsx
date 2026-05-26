@@ -172,7 +172,7 @@ export function HubView({
                 style={{ marginTop: '4px', background: 'rgba(255, 215, 0, 0.08)', borderColor: 'rgba(255, 215, 0, 0.3)', color: 'var(--color-gold)' }}
               >
                 <Coins size={16} />
-                <span>BUY TOKEN</span>
+                <span>BUY $TOKEN NOW!!!</span>
                 <ExternalLink size={12} />
               </a>
             </div>
@@ -276,8 +276,8 @@ export function HubView({
             )}
             
             <div className="game-card-content">
-              <div className="game-icon-container" style={{ background: 'rgba(189, 0, 255, 0.12)', border: '1px solid rgba(189, 0, 255, 0.4)', borderRadius: '50%', color: 'var(--color-purple-primary)', width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 12px rgba(189, 0, 255, 0.25)' }}>
-                <Film size={20} className="animate-pulse" />
+              <div className="game-icon-container" style={{ background: 'rgba(189, 0, 255, 0.12)', border: '1px solid rgba(189, 0, 255, 0.4)', borderRadius: '50%', color: 'var(--color-purple-primary)', width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 12px rgba(189, 0, 255, 0.25)', overflow: 'hidden', padding: 0 }}>
+                <img src={ryuchiCaveIcon} alt="Fight Scene Trailer" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} className="animate-pulse" />
               </div>
               <div className="game-details">
                 <h4 className="game-title">Fight Scene Trailer</h4>
