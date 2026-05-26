@@ -356,19 +356,47 @@ export function SerpentsWrathWebView({ onExit, onGoToLeaderboard }: SerpentsWrat
       localStorage.setItem('orochimaru_player_wallet', trimmedWallet);
       localStorage.setItem('orochimaru_player_country', playerCountry);
 
-      // Insert into Supabase database
-      const { error } = await supabase.from('leaderboard').insert({
-        name: trimmedName,
-        score: finalScore,
-        kills: finalKills,
-        waves: finalWaves,
-        platform: 'web',
-        email: trimmedEmail,
-        wallet_address: trimmedWallet,
-        country: playerCountry
-      });
+      // Check if wallet exists on leaderboard
+      const { data: existingData, error: fetchError } = await supabase
+        .from('leaderboard')
+        .select('*')
+        .eq('wallet_address', trimmedWallet)
+        .limit(1);
 
-      if (error) throw error;
+      if (fetchError) throw fetchError;
+
+      if (existingData && existingData.length > 0) {
+        const existingRecord = existingData[0];
+        if (finalScore > existingRecord.score) {
+          // Update existing score if the new score is higher
+          const { error: updateError } = await supabase
+            .from('leaderboard')
+            .update({
+              name: trimmedName,
+              score: finalScore,
+              kills: finalKills,
+              waves: finalWaves,
+              platform: 'web',
+              email: trimmedEmail,
+              country: playerCountry
+            })
+            .eq('wallet_address', trimmedWallet);
+          if (updateError) throw updateError;
+        }
+      } else {
+        // Insert new record
+        const { error: insertError } = await supabase.from('leaderboard').insert({
+          name: trimmedName,
+          score: finalScore,
+          kills: finalKills,
+          waves: finalWaves,
+          platform: 'web',
+          email: trimmedEmail,
+          wallet_address: trimmedWallet,
+          country: playerCountry
+        });
+        if (insertError) throw insertError;
+      }
       
       // Fetch current board, update local cache
       try {

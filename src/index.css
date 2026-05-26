@@ -87,8 +87,8 @@ body {
 /* Floating Audio Toggle */
 .sound-toggle-btn {
   position: absolute;
-  top: 15px;
-  right: 15px;
+  top: 25px;
+  right: 25px;
   z-index: 100;
   width: 40px;
   height: 40px;
@@ -1997,7 +1997,7 @@ body {
   z-index: 30;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 1024px) {
   .sw-mobile-attacks {
     display: flex;
   }

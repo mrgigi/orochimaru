@@ -666,7 +666,12 @@ export class GameEngine {
 
     // Background
     if (this.bgImg && this.bgImg.complete && this.bgImg.naturalWidth > 0) {
-      ctx.drawImage(this.bgImg, 0, 0, canvas.width, canvas.height);
+      const scale = Math.max(canvas.width / this.bgImg.naturalWidth, canvas.height / this.bgImg.naturalHeight);
+      const w = this.bgImg.naturalWidth * scale;
+      const h = this.bgImg.naturalHeight * scale;
+      const x = (canvas.width - w) / 2;
+      const y = (canvas.height - h) / 2;
+      ctx.drawImage(this.bgImg, x, y, w, h);
     } else {
       // Atmospheric Laboratory Stone Floor / Walls Gradient
       const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
