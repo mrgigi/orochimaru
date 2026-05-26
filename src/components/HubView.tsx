@@ -144,7 +144,7 @@ export function HubView({
           >
             <div className="game-status active-status">PLAYABLE DEMO (EARLY ACCESS)</div>
             
-            {/* Centered 9:16 video player preview */}
+            {/* Centered 16:9 video player preview */}
             <div className="showcase-video-wrapper" onClick={(e) => e.stopPropagation()}>
               <video 
                 src="/assets/trailer.mp4" 
@@ -153,7 +153,7 @@ export function HubView({
                 muted 
                 playsInline 
                 controls
-                className="showcase-video-portrait"
+                className="showcase-video-landscape"
               />
             </div>
 
