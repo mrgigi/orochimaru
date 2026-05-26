@@ -220,64 +220,70 @@ export function SerpentsWrathWebView({ onExit, onGoToLeaderboard }: SerpentsWrat
     }
   }, [store.muteAudio]);
 
-  // Frame loop in React to update the overlay HUD elements directly
+  // Frame loop in React to update the overlay HUD elements directly.
+  // NOTE: We do NOT check engineRef.current in the outer guard — the engine is
+  // created inside a setTimeout AFTER setScreen('playing'), so the effect would
+  // fire before the engine is ready. We let the RAF loop spin until the engine
+  // becomes available, then start updating the DOM refs.
   useEffect(() => {
-    if (screen !== 'playing' || !engineRef.current) return;
+    if (screen !== 'playing') return;
 
     let frameId: number;
     const updateOverlayHUD = () => {
       const engine = engineRef.current;
-      if (!engine) return;
 
-      const state = engine.getHUDState();
+      if (engine) {
+        const state = engine.getHUDState();
 
-      // HP Bar width and text
-      if (hpBarRef.current) {
-        hpBarRef.current.style.width = `${Math.max(0, (state.hp / state.maxHp) * 100)}%`;
-      }
-      if (hpTextRef.current) {
-        hpTextRef.current.innerText = `${Math.ceil(state.hp)}`;
-      }
-
-      // Chakra Bar width and text
-      if (ckBarRef.current) {
-        ckBarRef.current.style.width = `${Math.max(0, (state.chakra / state.maxChakra) * 100)}%`;
-      }
-      if (ckTextRef.current) {
-        ckTextRef.current.innerText = `${Math.ceil(state.chakra)}`;
-      }
-
-      // Metrics in Top Right
-      if (scoreTextRef.current) {
-        scoreTextRef.current.innerText = `SCORE: ${state.score}`;
-      }
-      if (waveTextRef.current) {
-        waveTextRef.current.innerText = `WAVE ${state.wave + 1}/7`;
-      }
-      if (killsTextRef.current) {
-        killsTextRef.current.innerText = `KILLS: ${state.kills}`;
-      }
-
-      // Attack cooldown overlay sliders
-      const attackTypes = ['snake_strike', 'shadow_snake', 'kusanagi', 'edo_tensei'] as const;
-      attackTypes.forEach(type => {
-        const ref = cdRefs[type].current;
-        if (ref) {
-          const framesRemaining = state.cooldowns[type];
-          const def = ATTACK_DEFS_SW[type];
-          const maxFrames = Math.ceil(def.cooldown / (1000 / 60));
-          const fraction = framesRemaining / maxFrames;
-
-          if (framesRemaining > 0) {
-            ref.style.height = `${fraction * 100}%`;
-            ref.classList.add('on-cooldown');
-          } else {
-            ref.style.height = '0%';
-            ref.classList.remove('on-cooldown');
-          }
+        // HP Bar width and text
+        if (hpBarRef.current) {
+          hpBarRef.current.style.width = `${Math.max(0, (state.hp / state.maxHp) * 100)}%`;
         }
-      });
+        if (hpTextRef.current) {
+          hpTextRef.current.innerText = `${Math.ceil(state.hp)}`;
+        }
 
+        // Chakra Bar width and text
+        if (ckBarRef.current) {
+          ckBarRef.current.style.width = `${Math.max(0, (state.chakra / state.maxChakra) * 100)}%`;
+        }
+        if (ckTextRef.current) {
+          ckTextRef.current.innerText = `${Math.ceil(state.chakra)}`;
+        }
+
+        // Metrics in Top Right
+        if (scoreTextRef.current) {
+          scoreTextRef.current.innerText = `SCORE: ${state.score}`;
+        }
+        if (waveTextRef.current) {
+          waveTextRef.current.innerText = `WAVE ${state.wave + 1}/7`;
+        }
+        if (killsTextRef.current) {
+          killsTextRef.current.innerText = `KILLS: ${state.kills}`;
+        }
+
+        // Attack cooldown overlay sliders
+        const attackTypes = ['snake_strike', 'shadow_snake', 'kusanagi', 'edo_tensei'] as const;
+        attackTypes.forEach(type => {
+          const ref = cdRefs[type].current;
+          if (ref) {
+            const framesRemaining = state.cooldowns[type];
+            const def = ATTACK_DEFS_SW[type];
+            const maxFrames = Math.ceil(def.cooldown / (1000 / 60));
+            const fraction = framesRemaining / maxFrames;
+
+            if (framesRemaining > 0) {
+              ref.style.height = `${fraction * 100}%`;
+              ref.classList.add('on-cooldown');
+            } else {
+              ref.style.height = '0%';
+              ref.classList.remove('on-cooldown');
+            }
+          }
+        });
+      }
+
+      // Always re-queue — the engine may not be ready yet (setTimeout delay)
       frameId = requestAnimationFrame(updateOverlayHUD);
     };
 
@@ -366,10 +372,11 @@ export function SerpentsWrathWebView({ onExit, onGoToLeaderboard }: SerpentsWrat
 
       synth.playClick();
       onGoToLeaderboard();
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to submit score to Supabase:', err);
       setScoreSubmitted(false);
-      alert('Failed to submit score. Please check your internet connection and try again.');
+      const detail = err?.message || err?.details || JSON.stringify(err);
+      alert(`Score submission failed: ${detail}\n\nPlease check your connection and try again.`);
     }
   };
 

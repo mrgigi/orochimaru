@@ -3067,30 +3067,44 @@ body {
 }
 
 .submit-score-btn {
-  background: var(--color-purple-primary);
-  border: none;
-  color: #050210;
+  background: linear-gradient(135deg, var(--color-purple-primary) 0%, #6b00cc 100%);
+  border: 1px solid rgba(189, 0, 255, 0.5);
+  color: #ffffff;
   font-family: var(--font-heading);
-  font-size: 11px;
-  padding: 0 18px;
-  border-radius: 6px;
+  font-size: 15px;
+  padding: 14px 24px;
+  border-radius: 8px;
   cursor: pointer;
-  font-weight: bold;
-  transition: all 0.2s ease;
-  text-shadow: 0 0 5px rgba(255, 255, 255, 0.2);
+  font-weight: 900;
+  letter-spacing: 2px;
+  transition: all 0.25s ease;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.4);
+  width: 100%;
+  display: block;
+  margin: 18px 0 6px;
+  box-shadow: 0 4px 20px rgba(189, 0, 255, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  text-align: center;
 }
 
 .submit-score-btn:hover {
-  background: #d844ff;
-  box-shadow: 0 0 15px var(--color-purple-primary);
-  transform: translateY(-1px);
+  background: linear-gradient(135deg, #d844ff 0%, #9b11ff 100%);
+  box-shadow: 0 6px 28px rgba(189, 0, 255, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
+}
+
+.submit-score-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 12px rgba(189, 0, 255, 0.5);
 }
 
 .submit-score-btn:disabled {
-  background: #333;
-  color: #666;
+  background: linear-gradient(135deg, #333 0%, #222 100%);
+  border-color: rgba(100, 100, 100, 0.3);
+  color: #888;
   cursor: not-allowed;
   box-shadow: none;
+  transform: none;
+  text-shadow: none;
 }
 
 /* Mobile adjustments for the score form */
@@ -3106,7 +3120,8 @@ body {
 }
 
 .mobile-submit-form .submit-score-btn {
-  padding: 0 12px;
+  padding: 12px 16px;
+  font-size: 13px;
 }
 
 /* Widescreen animation fixes */

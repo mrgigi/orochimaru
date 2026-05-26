@@ -104,22 +104,42 @@ export function HubView({
   const handleUnlockTrailer2 = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!onUnlockItem) return;
-    
     if (orochimaruTokens < 100) {
       synth.playSnake();
       alert("Inadequate Shinobi Points! Earn more PTS in Serpent Fury or Ryuchi Cave Trials.");
       return;
     }
-    
     const success = onUnlockItem('trailer2', 100);
-    if (success) {
-      synth.playRumble();
-    } else {
+    if (success) { synth.playRumble(); } else { synth.playSnake(); }
+  };
+
+  const handleUnlockLab = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!onUnlockItem) return;
+    if (orochimaruTokens < 50) {
       synth.playSnake();
+      alert("Insufficient Shinobi Points! You need 50 PTS to access the Forbidden Lab. Earn them through Serpent Fury.");
+      return;
     }
+    const success = onUnlockItem('game_lab', 50);
+    if (success) { synth.playRumble(); } else { synth.playSnake(); }
+  };
+
+  const handleUnlockCave = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!onUnlockItem) return;
+    if (orochimaruTokens < 200) {
+      synth.playSnake();
+      alert("Insufficient Shinobi Points! You need 200 PTS to enter Ryuchi Cave. Earn them through gameplay.");
+      return;
+    }
+    const success = onUnlockItem('game_cave', 200);
+    if (success) { synth.playRumble(); } else { synth.playSnake(); }
   };
 
   const isTrailer2Unlocked = unlockedItems.includes('trailer2');
+  const isLabUnlocked = unlockedItems.includes('game_lab');
+  const isCaveUnlocked = unlockedItems.includes('game_cave');
 
   return (
     <div className="hub-container">
@@ -216,14 +236,21 @@ export function HubView({
             </div>
           </div>
 
-          {/* Game 2: Forbidden Lab - Playable */}
+          {/* Game 2: Forbidden Lab — PTS-Locked */}
           <div 
-            onClick={() => handleGameClick('game1', false)}
-            className="game-card playable-card"
+            onClick={isLabUnlocked ? () => handleGameClick('game1', false) : handleUnlockLab}
+            className={`game-card ${isLabUnlocked ? 'playable-card' : 'locked-card'}`}
           >
-            <div className="game-status active-status">LABORATORY</div>
+            {isLabUnlocked ? (
+              <div className="game-status active-status">LABORATORY</div>
+            ) : (
+              <div className="game-status locked-status">
+                <Lock size={12} />
+                <span>50 PTS</span>
+              </div>
+            )}
             <div className="game-card-content">
-              <div className="game-icon-container" style={{ overflow: 'hidden', padding: 0 }}>
+              <div className="game-icon-container" style={{ overflow: 'hidden', padding: 0, filter: isLabUnlocked ? 'none' : 'grayscale(60%) brightness(0.6)' }}>
                 <img 
                   src={forbiddenLabIcon} 
                   alt="Forbidden Lab" 
@@ -232,23 +259,52 @@ export function HubView({
               </div>
               <div className="game-details">
                 <h4 className="game-title">Forbidden Lab: DNA Idle</h4>
-                <p className="game-desc">Harvest Forbidden Cells, purify DNA, and earn Shinobi Points. Up to <strong>200 PTS/day</strong>.</p>
+                {isLabUnlocked ? (
+                  <p className="game-desc">Harvest Forbidden Cells, purify DNA, and earn Shinobi Points. Up to <strong>200 PTS/day</strong>.</p>
+                ) : (
+                  <p className="game-desc">Perform forbidden experiments and harvest DNA cells. Unlock access with Shinobi Points earned in Serpent Fury.</p>
+                )}
               </div>
             </div>
-            <button className="play-now-btn">
-              <Gamepad2 size={16} />
-              <span>PLAY NOW</span>
-            </button>
+            {isLabUnlocked ? (
+              <button className="play-now-btn" onClick={(e) => { e.stopPropagation(); handleGameClick('game1', false); }}>
+                <Gamepad2 size={16} />
+                <span>PLAY NOW</span>
+              </button>
+            ) : (
+              <button
+                onClick={handleUnlockLab}
+                className="play-now-btn"
+                style={{
+                  background: orochimaruTokens >= 50
+                    ? 'linear-gradient(135deg, #22c55e, #16a34a)'
+                    : 'rgba(255,255,255,0.05)',
+                  color: orochimaruTokens >= 50 ? '#fff' : 'var(--text-muted)',
+                  borderColor: orochimaruTokens >= 50 ? 'rgba(34,197,94,0.5)' : 'rgba(255,255,255,0.1)',
+                  cursor: orochimaruTokens >= 50 ? 'pointer' : 'not-allowed'
+                }}
+              >
+                <Coins size={14} />
+                <span>UNLOCK — 50 PTS</span>
+              </button>
+            )}
           </div>
 
-          {/* Game 3: Ryuchi Cave Survival - Playable */}
+          {/* Game 3: Ryuchi Cave Survival — PTS-Locked */}
           <div 
-            onClick={() => handleGameClick('cave_trials', false)}
-            className="game-card playable-card game-card-v2"
+            onClick={isCaveUnlocked ? () => handleGameClick('cave_trials', false) : handleUnlockCave}
+            className={`game-card ${isCaveUnlocked ? 'playable-card game-card-v2' : 'locked-card'}`}
           >
-            <div className="game-status active-status">SURVIVAL</div>
+            {isCaveUnlocked ? (
+              <div className="game-status active-status">SURVIVAL</div>
+            ) : (
+              <div className="game-status locked-status">
+                <Lock size={12} />
+                <span>200 PTS</span>
+              </div>
+            )}
             <div className="game-card-content">
-              <div className="game-icon-container" style={{ overflow: 'hidden', padding: 0 }}>
+              <div className="game-icon-container" style={{ overflow: 'hidden', padding: 0, filter: isCaveUnlocked ? 'none' : 'grayscale(60%) brightness(0.6)' }}>
                 <img 
                   src={ryuchiCaveIcon} 
                   alt="Ryuchi Cave" 
@@ -257,13 +313,35 @@ export function HubView({
               </div>
               <div className="game-details">
                 <h4 className="game-title">Ryuchi Cave Survival</h4>
-                <p className="game-desc">Bullet-hell survival trials. Earn Shinobi Points for waves survived — daily PTS cap applies.</p>
+                {isCaveUnlocked ? (
+                  <p className="game-desc">Bullet-hell survival trials. Earn Shinobi Points for waves survived — daily PTS cap applies.</p>
+                ) : (
+                  <p className="game-desc">Forbidden territory. Prove your worth in Serpent Fury and accumulate enough Shinobi Points to gain entry.</p>
+                )}
               </div>
             </div>
-            <button className="play-now-btn play-v2-btn">
-              <Gamepad2 size={16} />
-              <span>ENTER CAVE</span>
-            </button>
+            {isCaveUnlocked ? (
+              <button className="play-now-btn play-v2-btn" onClick={(e) => { e.stopPropagation(); handleGameClick('cave_trials', false); }}>
+                <Gamepad2 size={16} />
+                <span>ENTER CAVE</span>
+              </button>
+            ) : (
+              <button
+                onClick={handleUnlockCave}
+                className="play-now-btn"
+                style={{
+                  background: orochimaruTokens >= 200
+                    ? 'linear-gradient(135deg, #a855f7, #7c3aed)'
+                    : 'rgba(255,255,255,0.05)',
+                  color: orochimaruTokens >= 200 ? '#fff' : 'var(--text-muted)',
+                  borderColor: orochimaruTokens >= 200 ? 'rgba(168,85,247,0.5)' : 'rgba(255,255,255,0.1)',
+                  cursor: orochimaruTokens >= 200 ? 'pointer' : 'not-allowed'
+                }}
+              >
+                <Coins size={14} />
+                <span>UNLOCK — 200 PTS</span>
+              </button>
+            )}
           </div>
 
           {/* Game 4: Locked */}
@@ -306,7 +384,7 @@ export function HubView({
           
           {/* Vault Item 1: Ryuchi Secrets (Trailer 2) — 100 PTS */}
           <div 
-            onClick={isTrailer2Unlocked ? () => setActiveWatchVideoUrl('/assets/trailer2.mp4') : handleUnlockTrailer2}
+            onClick={isTrailer2Unlocked ? () => setActiveWatchVideoUrl('https://vpogqqmfqkxzdcrzakqy.supabase.co/storage/v1/object/sign/Videos/Trailer2.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lN2I4ZTRlZi1kNGI1LTRmZTYtOTY2ZC05Zjg2Njc0Zjg1MTgiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlb3MvVHJhaWxlcjIubXA0IiwiaWF0IjoxNzc5ODAzNjc2LCJleHAiOjE4MTEzMzk2NzZ9.575ZIiNn7TNBHf93d7mm4Dv65bkC5A1E1OGKAD1uiV4') : handleUnlockTrailer2}
             className={`game-card ${isTrailer2Unlocked ? 'playable-card' : 'locked-card'}`}
             style={isTrailer2Unlocked ? { borderImageSource: 'linear-gradient(135deg, #22c55e, #a855f7)' } : undefined}
           >
@@ -333,7 +411,7 @@ export function HubView({
               <button 
                 onClick={(e) => {
                   e.stopPropagation();
-                  setActiveWatchVideoUrl('/assets/trailer2.mp4');
+                  setActiveWatchVideoUrl('https://vpogqqmfqkxzdcrzakqy.supabase.co/storage/v1/object/sign/Videos/Trailer2.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lN2I4ZTRlZi1kNGI1LTRmZTYtOTY2ZC05Zjg2Njc0Zjg1MTgiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlb3MvVHJhaWxlcjIubXA0IiwiaWF0IjoxNzc5ODAzNjc2LCJleHAiOjE4MTEzMzk2NzZ9.575ZIiNn7TNBHf93d7mm4Dv65bkC5A1E1OGKAD1uiV4');
                 }}
                 className="play-now-btn" 
                 style={{ background: 'linear-gradient(135deg, #22c55e, #a855f7)', color: '#fff' }}
@@ -362,8 +440,8 @@ export function HubView({
                 <Film size={20} style={{ opacity: 0.4, color: '#22c55e' }} />
               </div>
               <div className="game-details">
-                <h4 className="game-title">Orochi's Origin Scroll</h4>
-                <p className="game-desc">Restricted access: lore scroll detailing Orochimaru's forbidden research origins and early experiments.</p>
+                <h4 className="game-title" style={{ letterSpacing: '0.2em', color: 'var(--text-muted)', filter: 'blur(3.5px)', userSelect: 'none' }}>???</h4>
+                <p className="game-desc" style={{ filter: 'blur(4px)', userSelect: 'none', opacity: 0.5 }}>Classified. Unlock to reveal.</p>
               </div>
             </div>
             <div className="locked-banner">COMING SOON</div>
@@ -388,8 +466,8 @@ export function HubView({
                 <Star size={20} style={{ opacity: 0.4, color: '#a855f7' }} />
               </div>
               <div className="game-details">
-                <h4 className="game-title">Edo Secrets: Minato Namikaze</h4>
-                <p className="game-desc">Restricted file on the Fourth Hokage reanimation. Features character sprites and speed previews.</p>
+                <h4 className="game-title" style={{ letterSpacing: '0.2em', color: 'var(--text-muted)', filter: 'blur(3.5px)', userSelect: 'none' }}>???</h4>
+                <p className="game-desc" style={{ filter: 'blur(4px)', userSelect: 'none', opacity: 0.5 }}>Classified. Unlock to reveal.</p>
               </div>
             </div>
             <div className="locked-banner">COMING SOON</div>
@@ -406,8 +484,8 @@ export function HubView({
                 <Star size={20} style={{ opacity: 0.4, color: '#c084fc' }} />
               </div>
               <div className="game-details">
-                <h4 className="game-title">Cursed Seal Blueprint</h4>
-                <p className="game-desc">Full design schematics of the Heavenly Curse Marks — exclusive to elite researchers.</p>
+                <h4 className="game-title" style={{ letterSpacing: '0.2em', color: 'var(--text-muted)', filter: 'blur(3.5px)', userSelect: 'none' }}>???</h4>
+                <p className="game-desc" style={{ filter: 'blur(4px)', userSelect: 'none', opacity: 0.5 }}>Classified. Unlock to reveal.</p>
               </div>
             </div>
             <div className="locked-banner">COMING SOON</div>
@@ -432,8 +510,8 @@ export function HubView({
                 <Crown size={20} style={{ opacity: 0.4, color: '#ffd700' }} />
               </div>
               <div className="game-details">
-                <h4 className="game-title">Ryuchi Cave: Final Boss Preview</h4>
-                <p className="game-desc">Classified video of the final boss encounter deep in Ryuchi Cave — legendary difficulty.</p>
+                <h4 className="game-title" style={{ letterSpacing: '0.2em', color: 'var(--text-muted)', filter: 'blur(3.5px)', userSelect: 'none' }}>???</h4>
+                <p className="game-desc" style={{ filter: 'blur(4px)', userSelect: 'none', opacity: 0.5 }}>Classified. Unlock to reveal.</p>
               </div>
             </div>
             <div className="locked-banner">COMING SOON</div>
@@ -450,8 +528,8 @@ export function HubView({
                 <Crown size={20} style={{ color: '#ffd700', opacity: 0.7 }} />
               </div>
               <div className="game-details">
-                <h4 className="game-title">Orochimaru's True Form</h4>
-                <p className="game-desc">The rarest classified document in the Vault. Reserved only for the most dedicated Shinobi lords.</p>
+                <h4 className="game-title" style={{ letterSpacing: '0.2em', color: 'var(--text-muted)', filter: 'blur(3.5px)', userSelect: 'none' }}>???</h4>
+                <p className="game-desc" style={{ filter: 'blur(4px)', userSelect: 'none', opacity: 0.5 }}>Classified. Unlock to reveal.</p>
               </div>
             </div>
             <div className="locked-banner" style={{ background: 'linear-gradient(135deg, #ffd700, #f97316)', color: '#000', fontWeight: 900 }}>LEGENDARY — COMING SOON</div>
