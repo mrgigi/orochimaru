@@ -152,6 +152,24 @@ export class Player {
     attack.lastUsed = now;
     this.state.chakra -= attack.chakraCost;
 
+    if (attack.id === 'edo_tensei') {
+      const projectile: Projectile = {
+        id: `proj_${this.projectileIdCounter++}`,
+        x: this.state.x + this.state.width / 2,
+        y: this.state.y + this.state.height / 2,
+        width: 10, // starts at 10px radius
+        height: 10,
+        speed: 0, // static center
+        damage: attack.damage,
+        color: attack.color,
+        attackName: attack.name,
+        lifetime: 3000,
+        createdAt: now,
+        hitEnemyIds: [],
+      };
+      return projectile;
+    }
+
     const facingRight = this.state.facingRight;
     const projWidth = attack.range * 0.4;
     const speed = facingRight ? 14 : -14;

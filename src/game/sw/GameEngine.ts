@@ -354,9 +354,15 @@ export class GameEngine {
 
     // Update projectiles
     this.projectiles = this.projectiles.filter(p => {
-      p.x += p.speed;
+      if (p.attackName === 'Edo Tensei') {
+        p.width += 8; // expand radius
+        if (p.width >= 250) return false; // expire when reaches max radius
+      } else {
+        p.x += p.speed;
+        if (p.x < -100 || p.x > this.canvas.width + 100) return false;
+      }
+      
       if (now - p.createdAt > p.lifetime) return false;
-      if (p.x < -100 || p.x > this.canvas.width + 100) return false;
       return true;
     });
 
@@ -369,12 +375,25 @@ export class GameEngine {
         // Skip if this enemy has already been hit by this projectile
         if (proj.hitEnemyIds.includes(enemy.id)) continue;
 
-        if (
-          proj.x < enemy.x + enemy.width &&
-          proj.x + proj.width > enemy.x &&
-          proj.y < enemy.y + enemy.height &&
-          proj.y + proj.height > enemy.y
-        ) {
+        const isEdo = proj.attackName === 'Edo Tensei';
+        let collided = false;
+
+        if (isEdo) {
+          // Circle collision check: dist from cast center to enemy center
+          const ecx = enemy.x + enemy.width / 2;
+          const ecy = enemy.y + enemy.height / 2;
+          const dist = Math.hypot(ecx - proj.x, ecy - proj.y);
+          collided = dist <= proj.width; // width acts as radius
+        } else {
+          collided = (
+            proj.x < enemy.x + enemy.width &&
+            proj.x + proj.width > enemy.x &&
+            proj.y < enemy.y + enemy.height &&
+            proj.y + proj.height > enemy.y
+          );
+        }
+
+        if (collided) {
           enemy.hp -= proj.damage;
           enemy.isHit = true;
           enemy.hitTime = now;
@@ -727,11 +746,29 @@ export class GameEngine {
 
         ctx.restore();
       } else if (proj.attackName === 'Edo Tensei') {
-        // Large reanimation orb
-        ctx.fillStyle = proj.color;
+        // Draw an expanding reanimation dome (360 degrees)
         ctx.beginPath();
-        ctx.arc(proj.x + proj.width / 2, proj.y, proj.height, 0, Math.PI * 2);
+        const grad = ctx.createRadialGradient(proj.x, proj.y, 0, proj.x, proj.y, proj.width);
+        grad.addColorStop(0, 'rgba(255, 0, 102, 0.05)');
+        grad.addColorStop(0.85, 'rgba(255, 0, 102, 0.4)');
+        grad.addColorStop(1, '#ff0066');
+        ctx.fillStyle = grad;
+        ctx.arc(proj.x, proj.y, proj.width, 0, Math.PI * 2);
         ctx.fill();
+
+        // Main outer shockwave ring
+        ctx.strokeStyle = '#ff0066';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(proj.x, proj.y, proj.width, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Inner glowing ring
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(proj.x, proj.y, Math.max(0, proj.width - 15), 0, Math.PI * 2);
+        ctx.stroke();
       } else {
         // Draw serpentine snake strike projectile!
         ctx.save();
