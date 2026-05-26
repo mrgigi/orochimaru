@@ -73,17 +73,11 @@ export function SerpentsWrathWebView({ onExit, onGoToLeaderboard }: SerpentsWrat
 
   // Leaderboard and high score reset
   useEffect(() => {
-    const isReset = localStorage.getItem('orochimaru_leaderboard_reset_v3');
+    const isReset = localStorage.getItem('orochimaru_leaderboard_reset_v4');
     if (!isReset) {
-      const defaultLeaderboard = [
-        { id: '1', name: 'SerpentKing', score: 8500, waves: 7, platform: 'web', timestamp: Date.now() },
-        { id: '2', name: 'NinjaSlayer', score: 7200, waves: 7, platform: 'web', timestamp: Date.now() },
-        { id: '3', name: 'SnakeMaster', score: 6100, waves: 6, platform: 'web', timestamp: Date.now() },
-        { id: '4', name: 'ShadowViper', score: 5400, waves: 5, platform: 'web', timestamp: Date.now() },
-      ];
-      localStorage.setItem('orochimaru_leaderboard', JSON.stringify(defaultLeaderboard));
+      localStorage.setItem('orochimaru_leaderboard', JSON.stringify([]));
       localStorage.setItem('orochimaru_highscore', '0');
-      localStorage.setItem('orochimaru_leaderboard_reset_v3', 'true');
+      localStorage.setItem('orochimaru_leaderboard_reset_v4', 'true');
     }
   }, []);
 
@@ -92,22 +86,9 @@ export function SerpentsWrathWebView({ onExit, onGoToLeaderboard }: SerpentsWrat
       const saved = localStorage.getItem('orochimaru_leaderboard');
       let list = saved ? JSON.parse(saved) : [];
       list.sort((a: any, b: any) => b.score - a.score);
-      if (list.length === 0) {
-        list = [
-          { name: 'SerpentKing', score: 8500, waves: 7 },
-          { name: 'NinjaSlayer', score: 7200, waves: 7 },
-          { name: 'SnakeMaster', score: 6100, waves: 6 },
-          { name: 'ShadowViper', score: 5400, waves: 5 },
-        ];
-      }
       setTopScores(list.slice(0, 4));
     } catch {
-      setTopScores([
-        { name: 'SerpentKing', score: 8500, waves: 7 },
-        { name: 'NinjaSlayer', score: 7200, waves: 7 },
-        { name: 'SnakeMaster', score: 6100, waves: 6 },
-        { name: 'ShadowViper', score: 5400, waves: 5 },
-      ]);
+      setTopScores([]);
     }
 
     const hs = localStorage.getItem('orochimaru_highscore');
@@ -120,9 +101,18 @@ export function SerpentsWrathWebView({ onExit, onGoToLeaderboard }: SerpentsWrat
 
   const [canvasDim, setCanvasDim] = useState({ w: 1000, h: 600 });
   
-  // Leaderboard entry name
+  // Leaderboard entry name & metadata
   const [playerName, setPlayerName] = useState(() => {
-    return localStorage.getItem('orochimaru_player_name') || 'Shinobi_' + Math.floor(Math.random() * 900 + 100);
+    return localStorage.getItem('orochimaru_player_name') || '';
+  });
+  const [playerEmail, setPlayerEmail] = useState(() => {
+    return localStorage.getItem('orochimaru_player_email') || '';
+  });
+  const [playerWallet, setPlayerWallet] = useState(() => {
+    return localStorage.getItem('orochimaru_player_wallet') || '';
+  });
+  const [playerCountry, setPlayerCountry] = useState(() => {
+    return localStorage.getItem('orochimaru_player_country') || 'US';
   });
   const [scoreSubmitted, setScoreSubmitted] = useState(false);
 
@@ -265,10 +255,14 @@ export function SerpentsWrathWebView({ onExit, onGoToLeaderboard }: SerpentsWrat
 
   const submitScore = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!playerName.trim() || scoreSubmitted) return;
+    if (!playerName.trim() || !playerEmail.trim() || !playerWallet.trim() || scoreSubmitted) return;
 
     try {
       localStorage.setItem('orochimaru_player_name', playerName.trim());
+      localStorage.setItem('orochimaru_player_email', playerEmail.trim());
+      localStorage.setItem('orochimaru_player_wallet', playerWallet.trim());
+      localStorage.setItem('orochimaru_player_country', playerCountry);
+
       const saved = localStorage.getItem('orochimaru_leaderboard');
       const leaderboard = saved ? JSON.parse(saved) : [];
       
@@ -279,7 +273,10 @@ export function SerpentsWrathWebView({ onExit, onGoToLeaderboard }: SerpentsWrat
         kills: finalKills,
         waves: finalWaves,
         platform: 'web',
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        email: playerEmail.trim(),
+        walletAddress: playerWallet.trim(),
+        country: playerCountry
       };
 
       leaderboard.push(newEntry);
@@ -376,14 +373,22 @@ export function SerpentsWrathWebView({ onExit, onGoToLeaderboard }: SerpentsWrat
                     </tr>
                   </thead>
                   <tbody>
-                    {topScores.map((entry, idx) => (
-                      <tr key={idx}>
-                        <td>{idx + 1}</td>
-                        <td>{entry.name}</td>
-                        <td>{entry.score.toLocaleString()}</td>
-                        <td>{entry.waves}</td>
+                    {topScores.length === 0 ? (
+                      <tr>
+                        <td colSpan={4} className="text-muted text-center" style={{ padding: '20px 0', textAlign: 'center' }}>
+                          No rankings recorded yet.
+                        </td>
                       </tr>
-                    ))}
+                    ) : (
+                      topScores.map((entry, idx) => (
+                        <tr key={idx}>
+                          <td>{idx + 1}</td>
+                          <td>{entry.name}</td>
+                          <td>{entry.score.toLocaleString()}</td>
+                          <td>{entry.waves}</td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -496,8 +501,8 @@ export function SerpentsWrathWebView({ onExit, onGoToLeaderboard }: SerpentsWrat
 
               {/* Score submission form */}
               <form onSubmit={submitScore} className="leaderboard-submit-form">
-                <label htmlFor="playerName">RECORD LEGACY (ENTER SHINOBI NAME)</label>
-                <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="playerName">SHINOBI NAME</label>
                   <input
                     type="text"
                     id="playerName"
@@ -507,10 +512,70 @@ export function SerpentsWrathWebView({ onExit, onGoToLeaderboard }: SerpentsWrat
                     maxLength={15}
                     required
                   />
-                  <button type="submit" className="submit-score-btn" disabled={scoreSubmitted}>
-                    {scoreSubmitted ? 'SUBMITTING...' : 'SUBMIT SCORE'}
-                  </button>
                 </div>
+
+                <div className="form-group">
+                  <label htmlFor="playerEmail">EMAIL ADDRESS</label>
+                  <input
+                    type="email"
+                    id="playerEmail"
+                    value={playerEmail}
+                    onChange={(e) => setPlayerEmail(e.target.value)}
+                    placeholder="email@domain.com"
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="playerWallet">ETH WALLET ADDRESS</label>
+                  <input
+                    type="text"
+                    id="playerWallet"
+                    value={playerWallet}
+                    onChange={(e) => setPlayerWallet(e.target.value)}
+                    placeholder="0x..."
+                    pattern="^0x[a-fA-F0-9]{40}$"
+                    title="Ethereum address must start with 0x and be 42 characters long"
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="playerCountry">COUNTRY</label>
+                  <select
+                    id="playerCountry"
+                    value={playerCountry}
+                    onChange={(e) => setPlayerCountry(e.target.value)}
+                    required
+                  >
+                    <option value="US">🇺🇸 United States</option>
+                    <option value="GB">🇬🇧 United Kingdom</option>
+                    <option value="CA">🇨🇦 Canada</option>
+                    <option value="AU">🇦🇺 Australia</option>
+                    <option value="DE">🇩🇪 Germany</option>
+                    <option value="FR">🇫🇷 France</option>
+                    <option value="JP">🇯🇵 Japan</option>
+                    <option value="IN">🇮🇳 India</option>
+                    <option value="CN">🇨🇳 China</option>
+                    <option value="BR">🇧🇷 Brazil</option>
+                    <option value="ZA">🇿🇦 South Africa</option>
+                    <option value="NG">🇳🇬 Nigeria</option>
+                    <option value="ES">🇪🇸 Spain</option>
+                    <option value="IT">🇮🇹 Italy</option>
+                    <option value="NL">🇳🇱 Netherlands</option>
+                    <option value="SG">🇸🇬 Singapore</option>
+                    <option value="CH">🇨🇭 Switzerland</option>
+                    <option value="SE">🇸🇪 Sweden</option>
+                    <option value="MX">🇲🇽 Mexico</option>
+                    <option value="RU">🇷🇺 Russia</option>
+                    <option value="KR">🇰🇷 South Korea</option>
+                    <option value="OTHER">🌍 Other / Secret</option>
+                  </select>
+                </div>
+
+                <button type="submit" className="submit-score-btn" disabled={scoreSubmitted}>
+                  {scoreSubmitted ? 'SUBMITTING...' : 'SUBMIT SCORE'}
+                </button>
               </form>
 
               <div className="sw-result-btns">
@@ -557,21 +622,81 @@ export function SerpentsWrathWebView({ onExit, onGoToLeaderboard }: SerpentsWrat
 
               {/* Score submission form */}
               <form onSubmit={submitScore} className="leaderboard-submit-form victory-form">
-                <label htmlFor="playerName">RECORD YOUR LEGACY</label>
-                <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="playerNameVictory">SHINOBI NAME</label>
                   <input
                     type="text"
-                    id="playerName"
+                    id="playerNameVictory"
                     value={playerName}
                     onChange={(e) => setPlayerName(e.target.value.slice(0, 15))}
                     placeholder="Your name..."
                     maxLength={15}
                     required
                   />
-                  <button type="submit" className="submit-score-btn" disabled={scoreSubmitted}>
-                    {scoreSubmitted ? 'SUBMITTING...' : 'RECORD SCORE'}
-                  </button>
                 </div>
+
+                <div className="form-group">
+                  <label htmlFor="playerEmailVictory">EMAIL ADDRESS</label>
+                  <input
+                    type="email"
+                    id="playerEmailVictory"
+                    value={playerEmail}
+                    onChange={(e) => setPlayerEmail(e.target.value)}
+                    placeholder="email@domain.com"
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="playerWalletVictory">ETH WALLET ADDRESS</label>
+                  <input
+                    type="text"
+                    id="playerWalletVictory"
+                    value={playerWallet}
+                    onChange={(e) => setPlayerWallet(e.target.value)}
+                    placeholder="0x..."
+                    pattern="^0x[a-fA-F0-9]{40}$"
+                    title="Ethereum address must start with 0x and be 42 characters long"
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="playerCountryVictory">COUNTRY</label>
+                  <select
+                    id="playerCountryVictory"
+                    value={playerCountry}
+                    onChange={(e) => setPlayerCountry(e.target.value)}
+                    required
+                  >
+                    <option value="US">🇺🇸 United States</option>
+                    <option value="GB">🇬🇧 United Kingdom</option>
+                    <option value="CA">🇨🇦 Canada</option>
+                    <option value="AU">🇦🇺 Australia</option>
+                    <option value="DE">🇩🇪 Germany</option>
+                    <option value="FR">🇫🇷 France</option>
+                    <option value="JP">🇯🇵 Japan</option>
+                    <option value="IN">🇮🇳 India</option>
+                    <option value="CN">🇨🇳 China</option>
+                    <option value="BR">🇧🇷 Brazil</option>
+                    <option value="ZA">🇿🇦 South Africa</option>
+                    <option value="NG">🇳🇬 Nigeria</option>
+                    <option value="ES">🇪🇸 Spain</option>
+                    <option value="IT">🇮🇹 Italy</option>
+                    <option value="NL">🇳🇱 Netherlands</option>
+                    <option value="SG">🇸🇬 Singapore</option>
+                    <option value="CH">🇨🇭 Switzerland</option>
+                    <option value="SE">🇸🇪 Sweden</option>
+                    <option value="MX">🇲🇽 Mexico</option>
+                    <option value="RU">🇷🇺 Russia</option>
+                    <option value="KR">🇰🇷 South Korea</option>
+                    <option value="OTHER">🌍 Other / Secret</option>
+                  </select>
+                </div>
+
+                <button type="submit" className="submit-score-btn" disabled={scoreSubmitted}>
+                  {scoreSubmitted ? 'SUBMITTING...' : 'RECORD SCORE'}
+                </button>
               </form>
 
               <div className="sw-result-btns">

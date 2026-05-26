@@ -18,6 +18,55 @@ interface LeaderboardEntry {
   waves: number;
   platform: 'web' | 'mobile';
   timestamp: number;
+  email?: string;
+  walletAddress?: string;
+  country?: string;
+}
+
+const COUNTRY_MAP: Record<string, { flag: string; label: string }> = {
+  US: { flag: '🇺🇸', label: 'USA' },
+  GB: { flag: '🇬🇧', label: 'UK' },
+  CA: { flag: '🇨🇦', label: 'CAN' },
+  AU: { flag: '🇦🇺', label: 'AUS' },
+  DE: { flag: '🇩🇪', label: 'GER' },
+  FR: { flag: '🇫🇷', label: 'FRA' },
+  JP: { flag: '🇯🇵', label: 'JPN' },
+  IN: { flag: '🇮🇳', label: 'IND' },
+  CN: { flag: '🇨🇳', label: 'CHN' },
+  BR: { flag: '🇧🇷', label: 'BRA' },
+  ZA: { flag: '🇿🇦', label: 'RSA' },
+  NG: { flag: '🇳🇬', label: 'NGA' },
+  ES: { flag: '🇪🇸', label: 'ESP' },
+  IT: { flag: '🇮🇹', label: 'ITA' },
+  NL: { flag: '🇳🇱', label: 'NED' },
+  SG: { flag: '🇸🇬', label: 'SGP' },
+  CH: { flag: '🇨🇭', label: 'SUI' },
+  SE: { flag: '🇸🇪', label: 'SWE' },
+  MX: { flag: '🇲🇽', label: 'MEX' },
+  RU: { flag: '🇷🇺', label: 'RUS' },
+  KR: { flag: '🇰🇷', label: 'KOR' },
+  OTHER: { flag: '🌍', label: 'GLO' }
+};
+
+function formatCountry(code: string | undefined): string {
+  if (!code) return '🌍 GLO';
+  const match = COUNTRY_MAP[code.toUpperCase()];
+  return match ? `${match.flag} ${match.label}` : `🌍 ${code}`;
+}
+
+function obfuscateEmail(email: string | undefined): string {
+  if (!email) return '';
+  const parts = email.split('@');
+  if (parts.length !== 2) return email;
+  const [local, domain] = parts;
+  if (local.length <= 2) return `***@${domain}`;
+  return `${local.substring(0, 2)}***@${domain}`;
+}
+
+function formatWallet(address: string | undefined): string {
+  if (!address) return '';
+  if (address.length < 10) return address;
+  return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
 }
 
 interface LeaderboardViewProps {
@@ -38,11 +87,11 @@ export function LeaderboardView({ onExit }: LeaderboardViewProps) {
       } else {
         // Populate default mock data if empty to show styling
         const mockData: LeaderboardEntry[] = [
-          { id: '1', name: 'Kabuto_Yakushi', score: 75000, kills: 142, waves: 6, platform: 'web', timestamp: Date.now() - 3600000 * 2 },
-          { id: '2', name: 'Kimimaro_K', score: 62000, kills: 118, waves: 5, platform: 'mobile', timestamp: Date.now() - 3600000 * 5 },
-          { id: '3', name: 'Sasuke_Uchiha', score: 58000, kills: 105, waves: 5, platform: 'web', timestamp: Date.now() - 3600000 * 12 },
-          { id: '4', name: 'Tayuya_Flute', score: 32000, kills: 64, waves: 3, platform: 'mobile', timestamp: Date.now() - 3600000 * 24 },
-          { id: '5', name: 'Sakon_Ukon', score: 28000, kills: 58, waves: 3, platform: 'web', timestamp: Date.now() - 3600000 * 48 }
+          { id: '1', name: 'Kabuto_Yakushi', score: 75000, kills: 142, waves: 6, platform: 'web', timestamp: Date.now() - 3600000 * 2, email: 'kabuto@orochimaru.org', walletAddress: '0x71C229712aB297a7e8e50bB41A284E29037c89E1', country: 'JP' },
+          { id: '2', name: 'Kimimaro_K', score: 62000, kills: 118, waves: 5, platform: 'mobile', timestamp: Date.now() - 3600000 * 5, email: 'kimimaro@kaguya.net', walletAddress: '0x3aC9e28e8e89E197a7e8e50bB41A284E29037c89e5', country: 'CN' },
+          { id: '3', name: 'Sasuke_Uchiha', score: 58000, kills: 105, waves: 5, platform: 'web', timestamp: Date.now() - 3600000 * 12, email: 'sasuke@uchiha.com', walletAddress: '0x8bD15A412aB297a7e8e50bB41A284E29037c89E1', country: 'JP' },
+          { id: '4', name: 'Tayuya_Flute', score: 32000, kills: 64, waves: 3, platform: 'mobile', timestamp: Date.now() - 3600000 * 24, email: 'tayuya@sound4.org', walletAddress: '0xF6b46Cd12aB297a7e8e50bB41A284E29037c89E1', country: 'DE' },
+          { id: '5', name: 'Sakon_Ukon', score: 28000, kills: 58, waves: 3, platform: 'web', timestamp: Date.now() - 3600000 * 48, email: 'sakon@sound4.org', walletAddress: '0x9e2079512aB297a7e8e50bB41A284E29037c89E1', country: 'IT' }
         ];
         localStorage.setItem('orochimaru_leaderboard', JSON.stringify(mockData));
         setEntries(mockData);
@@ -74,8 +123,16 @@ export function LeaderboardView({ onExit }: LeaderboardViewProps) {
   const filteredEntries = entries
     .filter(e => {
       const matchesPlatform = filter === 'all' || e.platform === filter;
-      const matchesSearch = e.name.toLowerCase().includes(searchTerm.toLowerCase());
-      return matchesPlatform && matchesSearch;
+      
+      const term = searchTerm.toLowerCase().trim();
+      if (!term) return matchesPlatform;
+
+      const nameMatch = e.name.toLowerCase().includes(term);
+      const emailMatch = e.email ? e.email.toLowerCase().includes(term) : false;
+      const walletMatch = e.walletAddress ? e.walletAddress.toLowerCase().includes(term) : false;
+      const countryMatch = e.country ? e.country.toLowerCase().includes(term) : false;
+
+      return matchesPlatform && (nameMatch || emailMatch || walletMatch || countryMatch);
     })
     .sort((a, b) => b.score - a.score)
     .slice(0, 50); // limit to top 50
@@ -129,7 +186,7 @@ export function LeaderboardView({ onExit }: LeaderboardViewProps) {
           <Search size={14} className="search-icon text-muted" />
           <input
             type="text"
-            placeholder="Search shinobi name..."
+            placeholder="Search name, country, wallet..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -169,6 +226,8 @@ export function LeaderboardView({ onExit }: LeaderboardViewProps) {
             <div className="table-header-row">
               <span className="col-rank">RK</span>
               <span className="col-player">SHINOBI</span>
+              <span className="col-country">COUNTRY</span>
+              <span className="col-wallet">ETH WALLET</span>
               <span className="col-score">SCORE</span>
               <span className="col-kills">KILLS</span>
               <span className="col-waves">WAVES</span>
@@ -180,6 +239,7 @@ export function LeaderboardView({ onExit }: LeaderboardViewProps) {
               {filteredEntries.map((entry, index) => {
                 const isTop3 = index < 3;
                 const rankClass = index === 0 ? 'rank-1' : index === 1 ? 'rank-2' : index === 2 ? 'rank-3' : '';
+                const displayEmail = obfuscateEmail(entry.email);
                 
                 return (
                   <div key={entry.id || index} className={`table-row ${rankClass}`}>
@@ -187,7 +247,20 @@ export function LeaderboardView({ onExit }: LeaderboardViewProps) {
                       {isTop3 ? '🏆' : index + 1}
                     </span>
                     <span className="col-player font-heading">
-                      {entry.name}
+                      <div className="player-name-text">{entry.name}</div>
+                      {displayEmail && <div className="col-email-sub">{displayEmail}</div>}
+                    </span>
+                    <span className="col-country font-heading">
+                      {formatCountry(entry.country)}
+                    </span>
+                    <span className="col-wallet">
+                      {entry.walletAddress ? (
+                        <span className="wallet-badge" title={entry.walletAddress}>
+                          {formatWallet(entry.walletAddress)}
+                        </span>
+                      ) : (
+                        <span className="text-muted opacity-50">—</span>
+                      )}
                     </span>
                     <span className="col-score text-gold">
                       {entry.score.toLocaleString()}
