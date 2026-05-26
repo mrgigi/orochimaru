@@ -52,8 +52,6 @@ function App() {
             orochimaruTokens={store.orochimaruTokens}
             totalTokensClaimed={store.totalTokensClaimed}
             combatHighScore={store.combatHighScore}
-            muteAudio={store.muteAudio}
-            toggleMute={store.toggleMute}
             onSelectGame={handleSelectGame}
             unlockedItems={store.unlockedItems}
             onUnlockItem={store.unlockItem}

@@ -1,15 +1,14 @@
 import { useState } from 'react';
 import { 
   Lock, 
-  Unlock,
+  Play,
+  Film,
   ExternalLink, 
   Copy, 
   Check, 
   Send, 
   TrendingUp, 
   Gamepad2, 
-  Volume2, 
-  VolumeX, 
   Coins,
   Swords,
   Trophy
@@ -24,8 +23,6 @@ interface HubViewProps {
   orochimaruTokens: number;
   totalTokensClaimed: number;
   combatHighScore: number;
-  muteAudio: boolean;
-  toggleMute: () => void;
   onSelectGame: (gameId: string) => void;
   unlockedItems?: string[];
   onUnlockItem?: (itemId: string, cost: number) => boolean;
@@ -35,14 +32,13 @@ export function HubView({
   orochimaruTokens, 
   totalTokensClaimed,
   combatHighScore, 
-  muteAudio, 
-  toggleMute,
   onSelectGame,
   unlockedItems = [],
   onUnlockItem
 }: HubViewProps) {
   const [copied, setCopied] = useState(false);
   const [isPlatformModalOpen, setIsPlatformModalOpen] = useState(false);
+  const [activeWatchVideoUrl, setActiveWatchVideoUrl] = useState<string | null>(null);
   const contractAddress = "0x89fabE8405CFDE3f6aEeD8804e3BA4a10b7e21d3";
 
   const handleCopy = () => {
@@ -104,13 +100,6 @@ export function HubView({
             >
               <Trophy size={16} />
             </button>
-            <button 
-              onClick={toggleMute} 
-              className="sound-toggle-mini"
-              title={muteAudio ? "Unmute" : "Mute"}
-            >
-              {muteAudio ? <VolumeX size={16} /> : <Volume2 size={16} />}
-            </button>
           </div>
         </div>
         
@@ -150,7 +139,6 @@ export function HubView({
                 src="/assets/trailer.mp4" 
                 autoPlay 
                 loop 
-                muted 
                 playsInline 
                 controls
                 className="showcase-video-landscape"
@@ -159,9 +147,7 @@ export function HubView({
 
             <div className="game-details-stacked">
               <h4 className="game-title-featured">Serpent Fury</h4>
-              <p className="game-desc-featured">
-                Unlock the forbidden reanimations! Evade attacks with dynamic invincibility dashes, strike surrounding enemies with a 360-degree expanding Edo Tensei shockwave dome, and climb the live global database ranking scroll.
-              </p>
+              
               <button 
                 onClick={(e) => {
                   e.stopPropagation();
@@ -173,6 +159,22 @@ export function HubView({
                 <Swords size={16} />
                 <span>PLAY DEMO (FIGHT NOW)</span>
               </button>
+
+              <a 
+                href="https://app.uniswap.org/swap?outputCurrency=0x89fabE8405CFDE3f6aEeD8804e3BA4a10b7e21d3" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleLinkClick();
+                }}
+                className="play-now-btn featured-play-btn"
+                style={{ marginTop: '4px', background: 'rgba(255, 215, 0, 0.08)', borderColor: 'rgba(255, 215, 0, 0.3)', color: 'var(--color-gold)' }}
+              >
+                <Coins size={16} />
+                <span>BUY TOKEN</span>
+                <ExternalLink size={12} />
+              </a>
             </div>
           </div>
 
@@ -254,102 +256,95 @@ export function HubView({
       <section className="vault-section">
         <h3 className="section-title">FORBIDDEN VAULT</h3>
         <p className="section-subtitle" style={{ fontSize: '0.7rem', color: 'var(--text-grey)', marginTop: '-8px', marginBottom: '15px' }}>
-          Spend Shinobi Points (PTS) to unlock classified intelligence, restricted training footage, and legendary battle blueprints.
+          Spend Shinobi Points (PTS) to unlock classified intelligence, restricted training footage, and legendary blueprints.
         </p>
-        <div className="vault-grid">
+        <div className="games-grid">
           
           {/* Vault Item 1: Ryuchi Secrets (Trailer 2) */}
-          <div className={`vault-card ${isTrailer2Unlocked ? 'unlocked-card' : 'locked-card-vault'}`}>
-            <div className="vault-preview-wrapper">
-              {isTrailer2Unlocked ? (
-                <video 
-                  src="/assets/trailer2.mp4" 
-                  controls 
-                  autoPlay
-                  loop 
-                  muted 
-                  playsInline 
-                  className="vault-video"
-                />
-              ) : (
-                <div className="coming-soon-placeholder">
-                  <div className="vault-lock-overlay">
-                    <div className="vault-lock-icon-container">
-                      <Lock size={20} />
-                    </div>
-                    <span className="vault-lock-text">RYUCHI SECRETS</span>
-                    <span className="vault-lock-cost">100 PTS REQUIRED</span>
-                  </div>
-                </div>
-              )}
+          <div 
+            onClick={isTrailer2Unlocked ? () => setActiveWatchVideoUrl('/assets/trailer2.mp4') : handleUnlockTrailer2}
+            className={`game-card ${isTrailer2Unlocked ? 'playable-card' : 'locked-card'}`}
+            style={isTrailer2Unlocked ? { borderImageSource: 'linear-gradient(135deg, #22c55e, #a855f7)' } : undefined}
+          >
+            {isTrailer2Unlocked ? (
+              <div className="game-status active-status">UNLOCKED</div>
+            ) : (
+              <div className="game-status locked-status">
+                <Lock size={12} />
+                <span>100 PTS</span>
+              </div>
+            )}
+            
+            <div className="game-card-content">
+              <div className="game-icon-container" style={{ background: 'rgba(189, 0, 255, 0.12)', border: '1px solid rgba(189, 0, 255, 0.4)', borderRadius: '50%', color: 'var(--color-purple-primary)', width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 12px rgba(189, 0, 255, 0.25)' }}>
+                <Film size={20} className="animate-pulse" />
+              </div>
+              <div className="game-details">
+                <h4 className="game-title">Fight Scene Trailer</h4>
+                <p className="game-desc">Classified recording of the deep Ryuchi Cave trials. Preview legendary boss combat and mechanics.</p>
+              </div>
             </div>
-            <div className="vault-details">
-              <h4 className="vault-title">Ryuchi Secrets (Trailer 2)</h4>
-              <p className="vault-desc">
-                Classified recording showing the deep trials of Ryuchi Cave. Preview legendary boss-battle elements and advanced combat mechanics.
-              </p>
-              {isTrailer2Unlocked ? (
-                <div className="vault-unlocked-badge">
-                  <Unlock size={14} />
-                  <span>UNLOCKED - WATCHING NOW</span>
-                </div>
-              ) : (
-                <button 
-                  onClick={handleUnlockTrailer2}
-                  className="vault-action-btn"
-                >
-                  <span>UNLOCK (100 PTS)</span>
-                </button>
-              )}
-            </div>
+
+            {isTrailer2Unlocked ? (
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setActiveWatchVideoUrl('/assets/trailer2.mp4');
+                }}
+                className="play-now-btn" 
+                style={{ background: 'linear-gradient(135deg, #22c55e, #a855f7)', color: '#fff' }}
+              >
+                <Play size={14} />
+                <span>WATCH NOW</span>
+              </button>
+            ) : (
+              <button 
+                onClick={handleUnlockTrailer2}
+                className="play-now-btn"
+              >
+                <span>UNLOCK (100 PTS)</span>
+              </button>
+            )}
           </div>
 
           {/* Vault Item 2: Edo Secrets: Minato Namikaze */}
-          <div className="vault-card locked-card-vault">
-            <div className="vault-preview-wrapper">
-              <div className="coming-soon-placeholder">
-                <div className="vault-lock-overlay coming-soon-overlay">
-                  <div className="vault-lock-icon-container">
-                    <Lock size={20} />
-                  </div>
-                  <span className="vault-lock-text">MINATO REANIMATION</span>
-                  <span className="vault-lock-cost">COMING SOON</span>
-                </div>
+          <div className="game-card locked-card">
+            <div className="game-status locked-status">
+              <Lock size={12} />
+              <span>LOCKED</span>
+            </div>
+            
+            <div className="game-card-content">
+              <div className="game-icon-container" style={{ background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '50%', color: 'var(--text-grey)', width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Film size={20} style={{ opacity: 0.4 }} />
+              </div>
+              <div className="game-details">
+                <h4 className="game-title">Edo Secrets: Minato Namikaze</h4>
+                <p className="game-desc">Restricted file on the Fourth Hokage reanimation. Features character sprites and speed previews.</p>
               </div>
             </div>
-            <div className="vault-details">
-              <h4 className="vault-title">Edo Secrets: Minato Namikaze</h4>
-              <p className="vault-desc">
-                Restricted file on the Fourth Hokage reanimation jutsu. Features character sprites, speed modifiers, and weapon previews.
-              </p>
-              <button disabled className="vault-action-btn" style={{ opacity: 0.5 }}>
-                <span>LOCKED</span>
-              </button>
-            </div>
+            
+            <div className="locked-banner">COMING SOON</div>
           </div>
 
           {/* Vault Item 3: Wood Release Blueprint */}
-          <div className="vault-card locked-card-vault">
-            <div className="vault-preview-wrapper">
-              <div className="coming-soon-placeholder">
-                <div className="vault-lock-overlay coming-soon-overlay">
-                  <div className="vault-lock-icon-container">
-                    <Lock size={20} />
-                  </div>
-                  <span className="vault-lock-text">WOOD RELEASE BLUEPRINT</span>
-                  <span className="vault-lock-cost">COMING SOON</span>
-                </div>
+          <div className="game-card locked-card">
+            <div className="game-status locked-status">
+              <Lock size={12} />
+              <span>LOCKED</span>
+            </div>
+            
+            <div className="game-card-content">
+              <div className="game-icon-container" style={{ background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '50%', color: 'var(--text-grey)', width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Film size={20} style={{ opacity: 0.4 }} />
+              </div>
+              <div className="game-details">
+                <h4 className="game-title">Forbidden Blueprints: Wood Release</h4>
+                <p className="game-desc">Secret Senju DNA molecular reconstruction blueprints. Preview the Wood Golem summoning requirements.</p>
               </div>
             </div>
-            <div className="vault-details">
-              <h4 className="vault-title">Forbidden Blueprints: Wood Release</h4>
-              <p className="vault-desc">
-                Secret Senju clan molecular DNA reconstruction blueprints. Preview the Wood Golem summoning requirements and active shielding.
-              </p>
-              <button disabled className="vault-action-btn" style={{ opacity: 0.5 }}>
-                <span>LOCKED</span>
-              </button>
-            </div>
+            
+            <div className="locked-banner">COMING SOON</div>
           </div>
 
         </div>
@@ -463,6 +458,27 @@ export function HubView({
       <footer className="hub-footer">
         <p>© 2026 OROCHIMARU Ecosystem. Developed on Ethereum.</p>
       </footer>
+
+      {/* Widescreen Video Watch Modal Overlay */}
+      {activeWatchVideoUrl && (
+        <div className="video-watch-modal-overlay" onClick={() => setActiveWatchVideoUrl(null)}>
+          <div className="video-watch-modal-card animate-scale-in" onClick={(e) => e.stopPropagation()}>
+            <div className="video-watch-modal-header">
+              <span className="video-watch-modal-title">RYUCHI SECRETS - PREVIEW</span>
+              <button className="video-watch-modal-close" onClick={() => setActiveWatchVideoUrl(null)}>×</button>
+            </div>
+            <div className="video-watch-player-wrapper">
+              <video 
+                src={activeWatchVideoUrl} 
+                controls 
+                autoPlay 
+                playsInline 
+                className="video-watch-element"
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Platform Selection Modal */}
       <PlatformPickerModal
