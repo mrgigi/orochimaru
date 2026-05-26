@@ -382,51 +382,27 @@ export function HubView({
         </div>
         <div className="games-grid" style={{ marginBottom: 20 }}>
           
-          {/* Vault Item 1: Ryuchi Secrets (Trailer 2) — 100 PTS */}
+          {/* Vault Item 1: Fight Scene II — Permanently Locked / Coming Soon */}
           <div 
-            onClick={isTrailer2Unlocked ? () => setActiveWatchVideoUrl('https://vpogqqmfqkxzdcrzakqy.supabase.co/storage/v1/object/sign/Videos/Trailer2.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lN2I4ZTRlZi1kNGI1LTRmZTYtOTY2ZC05Zjg2Njc0Zjg1MTgiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlb3MvVHJhaWxlcjIubXA0IiwiaWF0IjoxNzc5ODAzNjc2LCJleHAiOjE4MTEzMzk2NzZ9.575ZIiNn7TNBHf93d7mm4Dv65bkC5A1E1OGKAD1uiV4') : handleUnlockTrailer2}
-            className={`game-card ${isTrailer2Unlocked ? 'playable-card' : 'locked-card'}`}
-            style={isTrailer2Unlocked ? { borderImageSource: 'linear-gradient(135deg, #22c55e, #a855f7)' } : undefined}
+            className="game-card locked-card"
+            onClick={() => { synth.playSnake(); }}
           >
-            {isTrailer2Unlocked ? (
-              <div className="game-status active-status">UNLOCKED</div>
-            ) : (
-              <div className="game-status locked-status">
-                <Lock size={12} />
-                <span>100 PTS</span>
-              </div>
-            )}
-            
+            <div className="game-status locked-status">
+              <Lock size={12} />
+              <span>LOCKED</span>
+            </div>
+
             <div className="game-card-content">
-              <div className="game-icon-container" style={{ background: 'rgba(189, 0, 255, 0.12)', border: '1px solid rgba(189, 0, 255, 0.4)', borderRadius: '50%', color: 'var(--color-purple-primary)', width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 12px rgba(189, 0, 255, 0.25)', overflow: 'hidden', padding: 0 }}>
-                <img src={ryuchiCaveIcon} alt="Fight Scene Trailer" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} className="animate-pulse" />
+              <div className="game-icon-container" style={{ background: 'rgba(189, 0, 255, 0.08)', border: '1px solid rgba(189, 0, 255, 0.25)', borderRadius: '50%', width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', padding: 0, filter: 'grayscale(60%) brightness(0.55)' }}>
+                <img src={ryuchiCaveIcon} alt="Fight Scene II" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
               </div>
               <div className="game-details">
-                <h4 className="game-title">Fight Scene Trailer</h4>
-                <p className="game-desc">Classified recording of the deep Ryuchi Cave trials. Preview legendary boss combat and mechanics.</p>
+                <h4 className="game-title">Fight Scene II</h4>
+                <p className="game-desc">Classified combat footage — Part II. Restricted access pending full deployment.</p>
               </div>
             </div>
 
-            {isTrailer2Unlocked ? (
-              <button 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setActiveWatchVideoUrl('https://vpogqqmfqkxzdcrzakqy.supabase.co/storage/v1/object/sign/Videos/Trailer2.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lN2I4ZTRlZi1kNGI1LTRmZTYtOTY2ZC05Zjg2Njc0Zjg1MTgiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlb3MvVHJhaWxlcjIubXA0IiwiaWF0IjoxNzc5ODAzNjc2LCJleHAiOjE4MTEzMzk2NzZ9.575ZIiNn7TNBHf93d7mm4Dv65bkC5A1E1OGKAD1uiV4');
-                }}
-                className="play-now-btn" 
-                style={{ background: 'linear-gradient(135deg, #22c55e, #a855f7)', color: '#fff' }}
-              >
-                <Play size={14} />
-                <span>WATCH NOW</span>
-              </button>
-            ) : (
-              <button 
-                onClick={handleUnlockTrailer2}
-                className="play-now-btn"
-              >
-                <span>UNLOCK (100 PTS)</span>
-              </button>
-            )}
+            <div className="locked-banner">COMING SOON</div>
           </div>
 
           {/* Vault Item 1b: Tier 1 Placeholder — 500 PTS */}
