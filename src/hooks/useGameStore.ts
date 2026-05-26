@@ -30,6 +30,7 @@ export interface GameState {
   muteAudio: boolean;
   upgrades: Record<string, Upgrade>;
   reanimations: Record<string, Reanimation>;
+  unlockedItems?: string[];
 }
 
 const DEFAULT_UPGRADES: Record<string, Upgrade> = {
@@ -134,7 +135,8 @@ export function useGameStore() {
           combatHighScore: parsed.combatHighScore ?? 0,
           muteAudio: parsed.muteAudio ?? false,
           upgrades: { ...DEFAULT_UPGRADES, ...parsed.upgrades },
-          reanimations: { ...DEFAULT_REANIMATIONS, ...parsed.reanimations }
+          reanimations: { ...DEFAULT_REANIMATIONS, ...parsed.reanimations },
+          unlockedItems: parsed.unlockedItems ?? []
         };
       }
     } catch (e) {
@@ -147,7 +149,8 @@ export function useGameStore() {
       combatHighScore: 0,
       muteAudio: false,
       upgrades: DEFAULT_UPGRADES,
-      reanimations: DEFAULT_REANIMATIONS
+      reanimations: DEFAULT_REANIMATIONS,
+      unlockedItems: []
     };
   });
 
@@ -302,7 +305,7 @@ export function useGameStore() {
 
   // Reset Game progress
   const resetGame = () => {
-    if (window.confirm("Reset your forbidden research? This clears all DNA, Upgrades, and Reanimations. (Mock $OROCHIMARU tokens will also reset).")) {
+    if (window.confirm("Reset your forbidden research? This clears all DNA, Upgrades, and Reanimations. (Shinobi points and unlocked content will also reset).")) {
       setState({
         forbiddenCells: 0,
         orochimaruTokens: 0,
@@ -310,11 +313,27 @@ export function useGameStore() {
         combatHighScore: 0,
         muteAudio: false,
         upgrades: DEFAULT_UPGRADES,
-        reanimations: DEFAULT_REANIMATIONS
+        reanimations: DEFAULT_REANIMATIONS,
+        unlockedItems: []
       });
       setCurrentView('hub');
       setActiveTab('lab');
     }
+  };
+
+  const unlockItem = (itemId: string, cost: number): boolean => {
+    if (state.orochimaruTokens >= cost) {
+      const currentUnlocked = state.unlockedItems ?? [];
+      if (currentUnlocked.includes(itemId)) return true;
+
+      setState(prev => ({
+        ...prev,
+        orochimaruTokens: prev.orochimaruTokens - cost,
+        unlockedItems: [...(prev.unlockedItems ?? []), itemId]
+      }));
+      return true;
+    }
+    return false;
   };
 
   // Idle income game loop (runs every 100ms)
@@ -354,6 +373,8 @@ export function useGameStore() {
     toggleMute,
     resetGame,
     clickPower: getClickPower(),
-    passiveRate: getPassiveRate()
+    passiveRate: getPassiveRate(),
+    unlockedItems: state.unlockedItems ?? [],
+    unlockItem
   };
 }

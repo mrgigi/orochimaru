@@ -209,7 +209,7 @@ export function CombatView({
           
           <h2 className="menu-header">Survive the Raid!</h2>
           <p className="menu-desc">
-            Anbu scouts have tracked your laboratory! Control Orochimaru to defend the ritual chamber and secure your tokens.
+            Anbu scouts have tracked your laboratory! Control Orochimaru to defend the ritual chamber and secure your points.
           </p>
 
           {/* Reanimation modifiers indicators */}
@@ -328,8 +328,8 @@ export function CombatView({
               <strong>Wave {waveReached}</strong>
             </div>
             <div className="result-row">
-              <span>Tokens Earned:</span>
-              <strong className="text-gold">+{tokensWon.toLocaleString()} $OROCHIMARU</strong>
+              <span>Points Earned:</span>
+              <strong className="text-gold">+{tokensWon.toLocaleString()} PTS</strong>
             </div>
           </div>
 

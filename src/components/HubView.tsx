@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { 
   Lock, 
+  Unlock,
   ExternalLink, 
   Copy, 
   Check, 
@@ -15,7 +16,6 @@ import {
 } from 'lucide-react';
 import { synth } from '../audio/SynthManager';
 import orochimaruFace from '../assets/orochimaru_face.png';
-import serpentFuryIcon from '../assets/serpent_fury_icon.jpg';
 import forbiddenLabIcon from '../assets/forbidden_lab_icon.jpg';
 import ryuchiCaveIcon from '../assets/ryuchi_cave_icon.jpg';
 import { PlatformPickerModal } from './PlatformPickerModal';
@@ -27,6 +27,8 @@ interface HubViewProps {
   muteAudio: boolean;
   toggleMute: () => void;
   onSelectGame: (gameId: string) => void;
+  unlockedItems?: string[];
+  onUnlockItem?: (itemId: string, cost: number) => boolean;
 }
 
 export function HubView({ 
@@ -35,7 +37,9 @@ export function HubView({
   combatHighScore, 
   muteAudio, 
   toggleMute,
-  onSelectGame 
+  onSelectGame,
+  unlockedItems = [],
+  onUnlockItem
 }: HubViewProps) {
   const [copied, setCopied] = useState(false);
   const [isPlatformModalOpen, setIsPlatformModalOpen] = useState(false);
@@ -66,21 +70,32 @@ export function HubView({
     synth.playClick();
   };
 
+  const handleUnlockTrailer2 = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!onUnlockItem) return;
+    
+    if (orochimaruTokens < 100) {
+      synth.playSnake();
+      alert("Inadequate Shinobi Points! Earn more PTS in Serpent Fury or Ryuchi Cave Trials.");
+      return;
+    }
+    
+    const success = onUnlockItem('trailer2', 100);
+    if (success) {
+      synth.playRumble();
+    } else {
+      synth.playSnake();
+    }
+  };
+
+  const isTrailer2Unlocked = unlockedItems.includes('trailer2');
+
   return (
     <div className="hub-container">
       {/* Header Banner Section */}
       <header className="hub-header">
-        {/* Background Video */}
-        <video 
-          src="/assets/trailer.mp4" 
-          autoPlay 
-          loop 
-          muted 
-          playsInline 
-          className="header-bg-video"
-        />
         <div className="header-top-bar">
-          <div className="token-badge">$OROCHIMARU</div>
+          <div className="token-badge">{orochimaruTokens.toLocaleString()} PTS</div>
           <div className="header-top-actions">
             <button 
               onClick={() => onSelectGame('leaderboard')} 
@@ -121,30 +136,44 @@ export function HubView({
         <h3 className="section-title">ECOSYSTEM GAMES</h3>
         <div className="games-grid">
           
-          {/* Game 1: Serpent Fury - Playable */}
+          {/* Featured Showcase Game 1: Serpent Fury - Playable Demo */}
           <div 
             onClick={() => handleGameClick('game2', false)}
-            className="game-card playable-card"
+            className="game-card playable-card featured-showcase-card"
             style={{ borderImageSource: 'linear-gradient(135deg, #ffd700, #8b00ff)' }}
           >
-            <div className="game-status active-status">BATTLE ARENA</div>
-            <div className="game-card-content">
-              <div className="game-icon-container" style={{ overflow: 'hidden', padding: 0 }}>
-                <img 
-                  src={serpentFuryIcon} 
-                  alt="Serpent Fury" 
-                  style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '3px' }} 
-                />
-              </div>
-              <div className="game-details">
-                <h4 className="game-title">Serpent Fury</h4>
-                <p className="game-desc">Omnidirectional 2D action game. Move freely, clear 7 waves of elite shinobi, and defeat the Hokage.</p>
-              </div>
+            <div className="game-status active-status">PLAYABLE DEMO (EARLY ACCESS)</div>
+            
+            {/* Centered 9:16 video player preview */}
+            <div className="showcase-video-wrapper" onClick={(e) => e.stopPropagation()}>
+              <video 
+                src="/assets/trailer.mp4" 
+                autoPlay 
+                loop 
+                muted 
+                playsInline 
+                controls
+                className="showcase-video-portrait"
+              />
             </div>
-            <button className="play-now-btn" style={{ background: 'linear-gradient(135deg, #a855f7, #ffd700)', color: '#000' }}>
-              <Swords size={16} />
-              <span>FIGHT NOW</span>
-            </button>
+
+            <div className="game-details-stacked">
+              <h4 className="game-title-featured">Serpent Fury</h4>
+              <p className="game-desc-featured">
+                Unlock the forbidden reanimations! Evade attacks with dynamic invincibility dashes, strike surrounding enemies with a 360-degree expanding Edo Tensei shockwave dome, and climb the live global database ranking scroll.
+              </p>
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleGameClick('game2', false);
+                }} 
+                className="play-now-btn featured-play-btn" 
+                style={{ background: 'linear-gradient(135deg, #a855f7, #ffd700)', color: '#000' }}
+              >
+                <Swords size={16} />
+                <span>PLAY DEMO (FIGHT NOW)</span>
+              </button>
+            </div>
           </div>
 
           {/* Game 2: Forbidden Lab - Playable */}
@@ -221,24 +250,108 @@ export function HubView({
         </div>
       </section>
 
-      {/* Featured Gameplay Trailer Showcase */}
-      <section className="showcase-section">
-        <h3 className="section-title">GAMEPLAY SHOWCASE</h3>
-        <div className="showcase-video-card">
-          <div className="video-player-wrapper">
-            <video 
-              src="/assets/trailer.mp4" 
-              controls 
-              className="showcase-video"
-              playsInline
-            />
+      {/* Forbidden Vault Rewards Section */}
+      <section className="vault-section">
+        <h3 className="section-title">FORBIDDEN VAULT</h3>
+        <p className="section-subtitle" style={{ fontSize: '0.7rem', color: 'var(--text-grey)', marginTop: '-8px', marginBottom: '15px' }}>
+          Spend Shinobi Points (PTS) to unlock classified intelligence, restricted training footage, and legendary battle blueprints.
+        </p>
+        <div className="vault-grid">
+          
+          {/* Vault Item 1: Ryuchi Secrets (Trailer 2) */}
+          <div className={`vault-card ${isTrailer2Unlocked ? 'unlocked-card' : 'locked-card-vault'}`}>
+            <div className="vault-preview-wrapper">
+              {isTrailer2Unlocked ? (
+                <video 
+                  src="/assets/trailer2.mp4" 
+                  controls 
+                  autoPlay
+                  loop 
+                  muted 
+                  playsInline 
+                  className="vault-video"
+                />
+              ) : (
+                <div className="coming-soon-placeholder">
+                  <div className="vault-lock-overlay">
+                    <div className="vault-lock-icon-container">
+                      <Lock size={20} />
+                    </div>
+                    <span className="vault-lock-text">RYUCHI SECRETS</span>
+                    <span className="vault-lock-cost">100 PTS REQUIRED</span>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="vault-details">
+              <h4 className="vault-title">Ryuchi Secrets (Trailer 2)</h4>
+              <p className="vault-desc">
+                Classified recording showing the deep trials of Ryuchi Cave. Preview legendary boss-battle elements and advanced combat mechanics.
+              </p>
+              {isTrailer2Unlocked ? (
+                <div className="vault-unlocked-badge">
+                  <Unlock size={14} />
+                  <span>UNLOCKED - WATCHING NOW</span>
+                </div>
+              ) : (
+                <button 
+                  onClick={handleUnlockTrailer2}
+                  className="vault-action-btn"
+                >
+                  <span>UNLOCK (100 PTS)</span>
+                </button>
+              )}
+            </div>
           </div>
-          <div className="showcase-info">
-            <h4>Serpent Fury - Official Gameplay Showcase</h4>
-            <p>
-              Unlock the forbidden reanimations! Evade attacks with dynamic invincibility dashes, strike surrounding enemies with a 360-degree expanding Edo Tensei shockwave dome, and climb the live global database ranking scroll.
-            </p>
+
+          {/* Vault Item 2: Edo Secrets: Minato Namikaze */}
+          <div className="vault-card locked-card-vault">
+            <div className="vault-preview-wrapper">
+              <div className="coming-soon-placeholder">
+                <div className="vault-lock-overlay coming-soon-overlay">
+                  <div className="vault-lock-icon-container">
+                    <Lock size={20} />
+                  </div>
+                  <span className="vault-lock-text">MINATO REANIMATION</span>
+                  <span className="vault-lock-cost">COMING SOON</span>
+                </div>
+              </div>
+            </div>
+            <div className="vault-details">
+              <h4 className="vault-title">Edo Secrets: Minato Namikaze</h4>
+              <p className="vault-desc">
+                Restricted file on the Fourth Hokage reanimation jutsu. Features character sprites, speed modifiers, and weapon previews.
+              </p>
+              <button disabled className="vault-action-btn" style={{ opacity: 0.5 }}>
+                <span>LOCKED</span>
+              </button>
+            </div>
           </div>
+
+          {/* Vault Item 3: Wood Release Blueprint */}
+          <div className="vault-card locked-card-vault">
+            <div className="vault-preview-wrapper">
+              <div className="coming-soon-placeholder">
+                <div className="vault-lock-overlay coming-soon-overlay">
+                  <div className="vault-lock-icon-container">
+                    <Lock size={20} />
+                  </div>
+                  <span className="vault-lock-text">WOOD RELEASE BLUEPRINT</span>
+                  <span className="vault-lock-cost">COMING SOON</span>
+                </div>
+              </div>
+            </div>
+            <div className="vault-details">
+              <h4 className="vault-title">Forbidden Blueprints: Wood Release</h4>
+              <p className="vault-desc">
+                Secret Senju clan molecular DNA reconstruction blueprints. Preview the Wood Golem summoning requirements and active shielding.
+              </p>
+              <button disabled className="vault-action-btn" style={{ opacity: 0.5 }}>
+                <span>LOCKED</span>
+              </button>
+            </div>
+          </div>
+
         </div>
       </section>
 
@@ -247,8 +360,8 @@ export function HubView({
         <h3 className="section-title">YOUR LAB STATUS</h3>
         <div className="summary-card">
           <div className="summary-item">
-            <span>Mock $OROCHIMARU Balance</span>
-            <strong>{orochimaruTokens.toLocaleString()} OROCHI</strong>
+            <span>Shinobi Points Balance</span>
+            <strong>{orochimaruTokens.toLocaleString()} PTS</strong>
           </div>
           <div className="summary-item">
             <span>Total Claimed</span>

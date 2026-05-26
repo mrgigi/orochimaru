@@ -55,6 +55,8 @@ function App() {
             muteAudio={store.muteAudio}
             toggleMute={store.toggleMute}
             onSelectGame={handleSelectGame}
+            unlockedItems={store.unlockedItems}
+            onUnlockItem={store.unlockItem}
           />
         ) : store.currentView === 'game2_web' ? (
           /* Game V2 Web Version */
@@ -101,9 +103,9 @@ function App() {
                 <h2 className="game-v1-title">Forbidden Lab</h2>
               </div>
 
-              <div className="header-tokens-display">
+              <div className="header-tokens-display" title="Shinobi Points">
                 <Coins size={14} className="text-gold" />
-                <span>{store.orochimaruTokens.toLocaleString()}</span>
+                <span>{store.orochimaruTokens.toLocaleString()} PTS</span>
               </div>
             </header>
 

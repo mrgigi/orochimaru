@@ -3953,111 +3953,296 @@ body {
   }
 }
 
-/* Hero background video style */
+/* Hero background gradient restoration */
 .hub-header {
   position: relative;
   overflow: hidden;
+  background: linear-gradient(180deg, rgba(26, 20, 56, 0.8) 0%, rgba(7, 5, 13, 0.95) 100%);
 }
 
-.header-bg-video {
+/* Featured Showcase Card (Serpent Fury) */
+.featured-showcase-card {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center;
+  text-align: center;
+  padding: 24px 18px !important;
+  border-width: 2px !important;
+  background: linear-gradient(135deg, rgba(26, 20, 56, 0.45) 0%, rgba(7, 5, 13, 0.9) 100%) !important;
+}
+
+.showcase-video-wrapper {
+  width: 100%;
+  max-width: 240px;
+  aspect-ratio: 9/16;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #000;
+  border: 1px solid rgba(189, 0, 255, 0.3);
+  box-shadow: 0 0 20px rgba(189, 0, 255, 0.2);
+  margin: 25px auto 16px auto;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.showcase-video-wrapper:hover {
+  border-color: rgba(189, 0, 255, 0.6);
+  box-shadow: 0 0 25px rgba(189, 0, 255, 0.4);
+}
+
+.showcase-video-portrait {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.game-details-stacked {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.game-title-featured {
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--color-gold);
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.25);
+  margin: 0;
+}
+
+.game-desc-featured {
+  font-size: 0.75rem;
+  color: var(--text-pale);
+  line-height: 1.5;
+  margin: 0;
+  max-width: 420px;
+}
+
+.featured-play-btn {
+  margin-top: 8px;
+  width: 100%;
+  max-width: 320px;
+  border-radius: 6px;
+  font-size: 0.8rem !important;
+  padding: 12px 20px !important;
+  box-shadow: 0 4px 15px rgba(168, 85, 247, 0.25);
+}
+
+.featured-play-btn:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 20px rgba(255, 215, 0, 0.4) !important;
+}
+
+/* Forbidden Vault Section */
+.vault-section {
+  padding: 0 20px;
+  margin-top: 35px;
+  flex: 1;
+}
+
+.vault-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-top: 15px;
+}
+
+.vault-card {
+  background: var(--bg-panel-purple);
+  border: var(--border-glass);
+  padding: 18px;
+  position: relative;
+  overflow: hidden;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.vault-card.unlocked-card {
+  border-color: rgba(0, 230, 118, 0.3);
+}
+
+.vault-card.unlocked-card:hover {
+  border-color: var(--color-green-primary);
+  box-shadow: 0 0 20px rgba(0, 230, 118, 0.15);
+}
+
+.vault-card.locked-card-vault {
+  border-color: rgba(189, 0, 255, 0.2);
+}
+
+.vault-card.locked-card-vault:hover {
+  border-color: rgba(189, 0, 255, 0.4);
+  box-shadow: 0 0 20px rgba(189, 0, 255, 0.1);
+}
+
+.vault-preview-wrapper {
+  width: 100%;
+  max-width: 220px;
+  aspect-ratio: 9/16;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #07050d;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  margin: 0 auto;
+  position: relative;
+}
+
+.vault-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Locked Overlay style */
+.vault-lock-overlay {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  opacity: 0.15; /* Keep text highly readable */
-  z-index: 0;
-  pointer-events: none;
-}
-
-/* Ensure header contents sit above video */
-.header-top-bar,
-.hero-content {
-  position: relative;
-  z-index: 2;
-}
-
-/* Featured Video Showcase section */
-.showcase-section {
-  max-width: 1200px;
-  margin: 40px auto;
-  padding: 0 20px;
-  text-align: left;
-}
-
-.showcase-video-card {
-  background: rgba(25, 20, 53, 0.35);
-  border: 1px solid rgba(189, 0, 255, 0.2);
-  border-radius: 12px;
-  overflow: hidden;
-  display: flex;
-  flex-direction: row;
-  gap: 24px;
-  padding: 20px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-  transition: border-color 0.3s ease;
-}
-
-.showcase-video-card:hover {
-  border-color: rgba(189, 0, 255, 0.45);
-}
-
-.video-player-wrapper {
-  flex: 3;
-  aspect-ratio: 16/9;
-  border-radius: 8px;
-  overflow: hidden;
-  background: #000;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.showcase-video {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.showcase-info {
-  flex: 2;
+  background: rgba(7, 5, 13, 0.85);
+  backdrop-filter: blur(4px);
   display: flex;
   flex-direction: column;
+  align-items: center;
   justify-content: center;
+  gap: 12px;
+  z-index: 10;
+  padding: 15px;
+  text-align: center;
 }
 
-.showcase-info h4 {
+.vault-lock-icon-container {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(189, 0, 255, 0.15);
+  border: 1px solid rgba(189, 0, 255, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-purple-primary);
+  box-shadow: 0 0 15px rgba(189, 0, 255, 0.3);
+}
+
+.vault-lock-overlay.coming-soon-overlay .vault-lock-icon-container {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: var(--text-grey);
+  box-shadow: none;
+}
+
+.vault-lock-text {
   font-family: var(--font-heading);
-  font-size: 1.25rem;
-  color: var(--color-gold);
-  margin: 0 0 12px 0;
-  letter-spacing: 0.5px;
-  text-shadow: 0 0 10px rgba(255, 215, 0, 0.25);
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: var(--text-pale);
 }
 
-.showcase-info p {
+.vault-lock-cost {
+  font-family: var(--font-heading);
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--color-gold);
+  text-shadow: 0 0 8px rgba(255, 215, 0, 0.3);
+}
+
+.vault-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.vault-title {
+  font-family: var(--font-heading);
+  font-size: 0.95rem;
+  font-weight: 800;
   color: var(--text-pale);
-  font-size: 0.9rem;
-  line-height: 1.6;
   margin: 0;
 }
 
-/* Media query for mobile */
-@media (max-width: 768px) {
-  .showcase-video-card {
-    flex-direction: column;
-    gap: 16px;
-    padding: 12px;
-  }
-  .showcase-info {
-    padding: 4px;
-  }
-  .showcase-info h4 {
-    font-size: 1.1rem;
-  }
-  .showcase-info p {
-    font-size: 0.8rem;
-  }
+.vault-desc {
+  font-size: 0.7rem;
+  color: var(--text-grey);
+  line-height: 1.4;
+  margin: 0;
 }
 
+.vault-action-btn {
+  width: 100%;
+  background: rgba(189, 0, 255, 0.1);
+  border: 1px solid rgba(189, 0, 255, 0.3);
+  color: var(--color-purple-primary);
+  padding: 10px;
+  font-family: var(--font-heading);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s;
+  box-shadow: 0 0 8px rgba(189, 0, 255, 0.15);
+}
 
+.vault-action-btn:hover {
+  background: var(--color-purple-primary);
+  color: var(--text-pale);
+  border-color: var(--color-purple-primary);
+  box-shadow: 0 0 15px rgba(189, 0, 255, 0.4);
+}
 
+.vault-action-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.vault-unlocked-badge {
+  width: 100%;
+  background: rgba(0, 230, 118, 0.15);
+  border: 1px solid rgba(0, 230, 118, 0.4);
+  color: var(--color-green-primary);
+  padding: 8px;
+  font-family: var(--font-heading);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: 4px;
+}
+
+/* Background schematic/seal pattern for coming soon placeholders */
+.coming-soon-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle, rgba(26, 20, 56, 0.45) 0%, rgba(7, 5, 13, 0.95) 100%);
+  position: relative;
+}
+
+.coming-soon-placeholder::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  opacity: 0.05;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.15) 1px, transparent 0), radial-gradient(rgba(255, 255, 255, 0.15) 1px, transparent 0);
+  background-size: 8px 8px;
+  background-position: 0 0, 4px 4px;
+}

@@ -88,7 +88,7 @@ export function LabView({
     const tokens = convertCellsToTokens();
     if (tokens) {
       synth.playRumble();
-      alert(`Successfully purified cells and claimed ${tokens.toLocaleString()} $OROCHIMARU tokens!`);
+      alert(`Successfully purified cells and claimed ${tokens.toLocaleString()} Shinobi Points!`);
     } else {
       synth.playSnake();
       alert("Insufficient Forbidden Cells! You need at least 10,000 cells to perform purification.");
@@ -166,11 +166,11 @@ export function LabView({
         <div className="purify-card">
           <div className="purify-info">
             <h3 className="card-title">DNA Purification</h3>
-            <p className="card-subtitle">Synthesize Forbidden Cells into official $OROCHIMARU tokens</p>
+            <p className="card-subtitle">Purify DNA cells to accumulate Shinobi Points</p>
             <div className="conversion-rate">
               <span>10,000 Cells</span>
               <ArrowRight size={14} className="text-muted" />
-              <span className="token-text">1 $OROCHIMARU</span>
+              <span className="token-text">1 Point (PTS)</span>
             </div>
           </div>
           <button 
