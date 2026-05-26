@@ -67,7 +67,7 @@ export function PlatformPickerModal({
             </button>
           </div>
 
-          {/* Mobile Version Card */}
+          {/* Tablet Touch Version Card */}
           <div 
             className="platform-card mobile-card" 
             onClick={() => handleSelect('mobile')}
@@ -75,16 +75,16 @@ export function PlatformPickerModal({
             <div className="platform-card-icon-wrap">
               <Smartphone size={36} className="text-purple icon-glow-purple" />
             </div>
-            <h3 className="platform-card-title">Mobile Interface</h3>
-            <p className="platform-card-summary">Designed for Phones & Handhelds</p>
+            <h3 className="platform-card-title">Touch Console</h3>
+            <p className="platform-card-summary">Designed for Tablets & Touch Screens</p>
             <ul className="platform-card-features">
-              <li>📱 Vertical Portrait Canvas</li>
+              <li>📟 High-Res Tablet Canvas</li>
               <li>🕹️ Virtual Touch Joystick</li>
               <li>🔘 Quick-Tap Attack Overlays</li>
-              <li>🎒 Compact HUD for Mobile Browsers</li>
+              <li>🎒 Immersive Tablet HUD Layout</li>
             </ul>
             <button className="platform-card-btn select-mobile-btn">
-              LAUNCH MOBILE VIEW
+              LAUNCH TOUCH VIEW
             </button>
           </div>
         </div>

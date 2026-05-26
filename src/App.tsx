@@ -13,8 +13,33 @@ import {
 } from 'lucide-react';
 import './App.css';
 
+import { useState, useEffect } from 'react';
+
 function App() {
   const store = useGameStore();
+  const [isPhone, setIsPhone] = useState(false);
+
+  useEffect(() => {
+    const checkDevice = () => {
+      const ua = navigator.userAgent.toLowerCase();
+      const isMobileUA = /mobile|iphone|ipod|android|blackberry|opera mini|iemobile|webos/i.test(ua);
+      const isTabletUA = /ipad|tablet|playbook|silk/i.test(ua);
+      
+      // Phone check: has mobile UA, is NOT a tablet, and is small screen width/height
+      const isSmallScreen = window.innerWidth < 768 && window.innerHeight < 1024;
+      const isIPadSpam = /macintosh/i.test(ua) && navigator.maxTouchPoints > 1;
+
+      if (isMobileUA && !isTabletUA && !isIPadSpam && isSmallScreen) {
+        setIsPhone(true);
+      } else {
+        setIsPhone(false);
+      }
+    };
+
+    checkDevice();
+    window.addEventListener('resize', checkDevice);
+    return () => window.removeEventListener('resize', checkDevice);
+  }, []);
 
   const handleSelectGame = (gameId: string) => {
     if (gameId === 'game1') {
@@ -30,6 +55,31 @@ function App() {
       store.setCurrentView('cave_trials');
     }
   };
+
+  if (isPhone) {
+    return (
+      <div className="phone-restricted-bg">
+        <div className="phone-restricted-card">
+          <div className="restricted-badge">ACCESS DENIED</div>
+          <h2 className="restricted-title">⚠️ SYSTEM LOCK</h2>
+          <p className="restricted-desc">
+            The simulation portal <strong>Serpent's Wrath</strong> has disabled access for mobile phone terminals.
+          </p>
+          <div className="restricted-divider" />
+          <p className="restricted-detail">
+            Phone displays are too compact to synchronize Orochimaru's complex combat seals.
+          </p>
+          <div className="authorized-platforms">
+            <div className="platform-auth-item">🖥️ PC & Laptop (Authorized)</div>
+            <div className="platform-auth-item">📟 Tablet & iPad (Authorized)</div>
+          </div>
+          <p className="restricted-footer">
+            Please log in from a Tablet or PC terminal to participate in the simulation.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const isWidescreen = store.currentView === 'game2_web' || store.currentView === 'leaderboard';
   const containerClass = isWidescreen ? 'widescreen-viewport-container' : 'mobile-viewport-container';
