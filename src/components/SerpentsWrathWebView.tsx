@@ -431,8 +431,8 @@ export function SerpentsWrathWebView({ onExit, onGoToLeaderboard }: SerpentsWrat
             </div>
 
             {/* Bottom-Center HUD (Q / W / E / R Combat cards) */}
-            <div className="web-hud-bottom-center">
-              {attackKeys.map(type => {
+            <div className="web-hud-bottom-center" style={{ zIndex: 40 }}>
+              {attackKeys.map((type, index) => {
                 const def = ATTACK_DEFS_SW[type];
                 let colorClass = 'green-glow';
                 if (type === 'shadow_snake') colorClass = 'purple-glow';
@@ -440,7 +440,15 @@ export function SerpentsWrathWebView({ onExit, onGoToLeaderboard }: SerpentsWrat
                 else if (type === 'edo_tensei') colorClass = 'red-glow';
 
                 return (
-                  <div key={type} className={`web-hud-key-card ${colorClass}`}>
+                  <button
+                    key={type}
+                    className={`web-hud-key-card ${colorClass}`}
+                    onClick={() => {
+                      engineRef.current?.triggerAttack(index);
+                      synth.playClick();
+                    }}
+                    style={{ cursor: 'pointer', background: 'none', border: 'none', textAlign: 'center', position: 'relative', overflow: 'hidden' }}
+                  >
                     {/* Cooldown Overlay */}
                     <div ref={cdRefs[type]} className="web-hud-key-cooldown" style={{ height: '0%' }} />
                     
@@ -448,7 +456,7 @@ export function SerpentsWrathWebView({ onExit, onGoToLeaderboard }: SerpentsWrat
                     <span className="whk-key">[{def.key}]</span>
                     {/* Label */}
                     <span className="whk-label">{def.label}</span>
-                  </div>
+                  </button>
                 );
               })}
             </div>

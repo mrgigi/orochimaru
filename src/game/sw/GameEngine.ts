@@ -490,6 +490,14 @@ export class GameEngine {
       return text.lifetime > 0;
     });
 
+    // Update active particles
+    this.particles = this.particles.filter(p => {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.life--;
+      return p.life > 0;
+    });
+
     // Update dying enemies
     this.dyingEnemies = this.dyingEnemies.filter(de => {
       const elapsed = now - de.deathTime;
