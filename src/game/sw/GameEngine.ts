@@ -32,6 +32,7 @@ export class GameEngine {
   bgImg: HTMLImageElement | null = null;
   playerImg: HTMLImageElement | null = null;
   enemyImg: HTMLImageElement | null = null;
+  bossImg: HTMLImageElement | null = null;
 
   // Audio
   audio: AudioManager;
@@ -72,6 +73,9 @@ export class GameEngine {
 
     this.enemyImg = new Image();
     this.enemyImg.src = '/assets/enemy-anbu-ninja.png';
+
+    this.bossImg = new Image();
+    this.bossImg.src = '/assets/hokage-boss.png';
   }
 
   setupInput(): void {
@@ -82,6 +86,12 @@ export class GameEngine {
   private handleKeyDown(e: KeyboardEvent): void {
     if (this.gameState !== GameState.PLAYING) return;
     const key = e.key.toLowerCase();
+
+    // Pause toggle
+    if (key === 'p' || key === 'escape') {
+      this.togglePause();
+      return;
+    }
 
     // Dash activation
     if (key === 'shift') {
@@ -312,6 +322,15 @@ export class GameEngine {
       this.gameState = GameState.PLAYING;
       this.lastTime = performance.now();
       this.onStateChange(this.gameState, this.stats);
+    }
+  }
+
+  togglePause(): void {
+    if (this.gameState === GameState.PLAYING) {
+      this.gameState = GameState.PAUSED;
+      this.onStateChange(this.gameState, this.stats);
+    } else if (this.gameState === GameState.PAUSED) {
+      this.resume();
     }
   }
 
@@ -573,7 +592,12 @@ export class GameEngine {
         kusanagi: Math.max(0, Math.ceil(((this.player.attacks[2].cooldown - (now - this.player.attacks[2].lastUsed)) / 1000) * 60)),
         edo_tensei: Math.max(0, Math.ceil(((this.player.attacks[3].cooldown - (now - this.player.attacks[3].lastUsed)) / 1000) * 60)),
       },
-      enemiesRemaining: this.enemies.length
+      enemiesRemaining: this.enemies.length,
+      gameState: this.gameState,
+      isBossWave: this.stats.isBossWave,
+      bossName: this.stats.bossName,
+      bossHp: this.stats.bossHp,
+      bossMaxHp: this.stats.bossMaxHp
     };
   }
 
@@ -666,7 +690,7 @@ export class GameEngine {
 
     // Draw enemies
     for (const enemy of this.enemies) {
-      drawEnemy(ctx, enemy, this.enemyImg);
+      drawEnemy(ctx, enemy, this.enemyImg, this.bossImg);
     }
 
     // Draw dying enemies (death animations)

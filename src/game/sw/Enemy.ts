@@ -111,7 +111,8 @@ export function updateEnemy(enemy: EnemyData, player: PlayerState, now: number):
 export function drawEnemy(
   ctx: CanvasRenderingContext2D,
   enemy: EnemyData,
-  enemyImg: HTMLImageElement | null
+  enemyImg: HTMLImageElement | null,
+  bossImg: HTMLImageElement | null = null
 ): void {
   const { x, y, width, height, isHit, hp, maxHp, type, color, isWarning } = enemy;
 
@@ -129,7 +130,7 @@ export function drawEnemy(
 
   // Boss has unique drawing
   if (type === EnemyType.KAGE) {
-    drawBoss(ctx, enemy);
+    drawBoss(ctx, enemy, bossImg);
     if (isWarning) {
       // Draw big warning indicator for boss
       ctx.fillStyle = '#ff1111';
@@ -188,7 +189,7 @@ export function drawEnemy(
   ctx.restore();
 }
 
-function drawBoss(ctx: CanvasRenderingContext2D, enemy: EnemyData): void {
+function drawBoss(ctx: CanvasRenderingContext2D, enemy: EnemyData, bossImg: HTMLImageElement | null): void {
   const { x, y, width, height, color } = enemy;
   const now = Date.now();
   const pulse = Math.sin(now * 0.005) * 0.15 + 0.85;
@@ -197,61 +198,77 @@ function drawBoss(ctx: CanvasRenderingContext2D, enemy: EnemyData): void {
   ctx.shadowColor = color;
   ctx.shadowBlur = 25 * pulse;
 
-  // Main body - large imposing figure
-  const gradient = ctx.createLinearGradient(x, y, x, y + height);
-  gradient.addColorStop(0, '#2a0015');
-  gradient.addColorStop(0.3, color);
-  gradient.addColorStop(0.7, '#8b0000');
-  gradient.addColorStop(1, '#1a0008');
-  ctx.fillStyle = gradient;
-  ctx.fillRect(x, y, width, height);
+  if (bossImg && bossImg.complete && bossImg.naturalWidth > 0) {
+    // Scale up slightly for imposing presence and adjust positioning
+    const imgRatio = bossImg.naturalWidth / bossImg.naturalHeight;
+    const drawWidth = width * 1.5;
+    const drawHeight = drawWidth / imgRatio;
+    
+    // Draw the new sprite
+    ctx.drawImage(
+      bossImg, 
+      x - (drawWidth - width) / 2, 
+      y - (drawHeight - height) - 10, 
+      drawWidth, 
+      drawHeight
+    );
+  } else {
+    // Main body - large imposing figure (fallback)
+    const gradient = ctx.createLinearGradient(x, y, x, y + height);
+    gradient.addColorStop(0, '#2a0015');
+    gradient.addColorStop(0.3, color);
+    gradient.addColorStop(0.7, '#8b0000');
+    gradient.addColorStop(1, '#1a0008');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(x, y, width, height);
 
-  // Kage hat (triangular)
-  ctx.fillStyle = '#ffffff';
-  ctx.beginPath();
-  ctx.moveTo(x + width / 2, y - 20);
-  ctx.lineTo(x + width * 0.15, y + 10);
-  ctx.lineTo(x + width * 0.85, y + 10);
-  ctx.closePath();
-  ctx.fill();
+    // Kage hat (triangular)
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.moveTo(x + width / 2, y - 20);
+    ctx.lineTo(x + width * 0.15, y + 10);
+    ctx.lineTo(x + width * 0.85, y + 10);
+    ctx.closePath();
+    ctx.fill();
 
-  // "Fire" kanji symbol on hat
-  ctx.fillStyle = color;
-  ctx.font = 'bold 16px serif';
-  ctx.textAlign = 'center';
-  ctx.fillText('火', x + width / 2, y + 6);
+    // "Fire" kanji symbol on hat
+    ctx.fillStyle = color;
+    ctx.font = 'bold 16px serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('火', x + width / 2, y + 6);
 
-  // Glowing eyes
-  ctx.shadowColor = '#ff0000';
-  ctx.shadowBlur = 12;
-  ctx.fillStyle = '#ff0000';
-  ctx.beginPath();
-  ctx.ellipse(x + width * 0.35, y + 30, 5, 7, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.ellipse(x + width * 0.65, y + 30, 5, 7, 0, 0, Math.PI * 2);
-  ctx.fill();
+    // Glowing eyes
+    ctx.shadowColor = '#ff0000';
+    ctx.shadowBlur = 12;
+    ctx.fillStyle = '#ff0000';
+    ctx.beginPath();
+    ctx.ellipse(x + width * 0.35, y + 30, 5, 7, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(x + width * 0.65, y + 30, 5, 7, 0, 0, Math.PI * 2);
+    ctx.fill();
 
-  // Kage robe details
-  ctx.shadowBlur = 0;
-  ctx.strokeStyle = '#ffd700';
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(x + width * 0.3, y + height * 0.4);
-  ctx.lineTo(x + width * 0.5, y + height * 0.5);
-  ctx.lineTo(x + width * 0.7, y + height * 0.4);
-  ctx.stroke();
+    // Kage robe details
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = '#ffd700';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(x + width * 0.3, y + height * 0.4);
+    ctx.lineTo(x + width * 0.5, y + height * 0.5);
+    ctx.lineTo(x + width * 0.7, y + height * 0.4);
+    ctx.stroke();
 
-  // Shoulder armor
-  ctx.fillStyle = '#ffd700';
-  ctx.fillRect(x - 5, y + 15, 15, 25);
-  ctx.fillRect(x + width - 10, y + 15, 15, 25);
+    // Shoulder armor
+    ctx.fillStyle = '#ffd700';
+    ctx.fillRect(x - 5, y + 15, 15, 25);
+    ctx.fillRect(x + width - 10, y + 15, 15, 25);
 
-  // Boss name label
-  ctx.fillStyle = '#ffd700';
-  ctx.font = 'bold 12px sans-serif';
-  ctx.textAlign = 'center';
-  ctx.shadowColor = '#ffd700';
-  ctx.shadowBlur = 8;
-  ctx.fillText('★ KAGE ★', x + width / 2, y + height + 18);
+    // Boss name label
+    ctx.fillStyle = '#ffd700';
+    ctx.font = 'bold 12px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.shadowColor = '#ffd700';
+    ctx.shadowBlur = 8;
+    ctx.fillText('★ KAGE ★', x + width / 2, y + height + 18);
+  }
 }

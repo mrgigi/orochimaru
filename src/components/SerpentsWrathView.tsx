@@ -158,6 +158,12 @@ export function SerpentsWrathView({ onExit, onGoToLeaderboard }: SerpentsWrathVi
   const scoreTextRef = useRef<HTMLSpanElement>(null);
   const waveTextRef = useRef<HTMLSpanElement>(null);
 
+  // New refs for pause and boss HP
+  const pauseOverlayRef = useRef<HTMLDivElement>(null);
+  const bossHpContainerRef = useRef<HTMLDivElement>(null);
+  const bossHpBarRef = useRef<HTMLDivElement>(null);
+  const bossHpTextRef = useRef<HTMLSpanElement>(null);
+
   const cdRefs = {
     snake_strike: useRef<HTMLDivElement>(null),
     shadow_snake: useRef<HTMLDivElement>(null),
@@ -271,6 +277,26 @@ export function SerpentsWrathView({ onExit, onGoToLeaderboard }: SerpentsWrathVi
             }
           }
         });
+
+        // Pause Overlay
+        if (pauseOverlayRef.current) {
+          pauseOverlayRef.current.style.display = state.gameState === 'paused' ? 'flex' : 'none';
+        }
+
+        // Boss HP
+        if (bossHpContainerRef.current) {
+          if (state.isBossWave && state.bossMaxHp && state.bossHp !== undefined) {
+            bossHpContainerRef.current.style.display = 'block';
+            if (bossHpBarRef.current) {
+              bossHpBarRef.current.style.width = `${Math.max(0, (state.bossHp / state.bossMaxHp) * 100)}%`;
+            }
+            if (bossHpTextRef.current) {
+              bossHpTextRef.current.innerText = `${state.bossName} - ${Math.ceil(state.bossHp)} / ${Math.ceil(state.bossMaxHp)}`;
+            }
+          } else {
+            bossHpContainerRef.current.style.display = 'none';
+          }
+        }
       }
 
       // Always re-queue — the engine may not be ready yet (setTimeout delay)
@@ -440,12 +466,20 @@ export function SerpentsWrathView({ onExit, onGoToLeaderboard }: SerpentsWrathVi
           <span>Hub</span>
         </button>
         <span className="sw-game-title">SERPENT FURY</span>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div className="sw-badges">
+          {screen === 'playing' && (
+            <button 
+              onClick={() => engineRef.current?.togglePause()}
+              className="sound-toggle-mini"
+              title="Pause Game (P)"
+            >
+              <span style={{ fontWeight: 'bold', fontSize: '10px' }}>PAUSE</span>
+            </button>
+          )}
           <button 
             onClick={store.toggleMute} 
-            className="sound-toggle-mini-web" 
+            className="sound-toggle-mini"
             title={store.muteAudio ? "Unmute" : "Mute"}
-            style={{ width: '28px', height: '28px', borderRadius: '4px' }}
           >
             {store.muteAudio ? <VolumeX size={14} /> : <Volume2 size={14} />}
           </button>
@@ -569,6 +603,29 @@ export function SerpentsWrathView({ onExit, onGoToLeaderboard }: SerpentsWrathVi
           <div style={{ position: 'absolute', top: 12, right: 12, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', zIndex: 10, pointerEvents: 'none', fontFamily: 'monospace' }}>
             <span ref={scoreTextRef} style={{ color: '#4ade80', fontSize: '12px', fontWeight: 'bold', textShadow: '0 0 6px rgba(74,222,128,0.4)' }}>SCORE: 0</span>
             <span ref={waveTextRef} style={{ color: '#fbbf24', fontSize: '10px', fontWeight: 'bold' }}>WAVE 1/7</span>
+          </div>
+
+          {/* Top-Center Boss HP HUD */}
+          <div ref={bossHpContainerRef} style={{ display: 'none', position: 'absolute', top: '12px', left: '50%', transform: 'translateX(-50%)', width: '50%', zIndex: 10 }}>
+            <div style={{ textAlign: 'center', marginBottom: '2px' }}>
+              <span ref={bossHpTextRef} style={{ color: '#ff0044', fontFamily: 'var(--font-heading)', fontSize: '10px', textShadow: '0 0 3px #ff0000' }}>BOSS HP</span>
+            </div>
+            <div style={{ background: 'rgba(0,0,0,0.7)', border: '1px solid #ff0044', height: '10px', width: '100%' }}>
+              <div ref={bossHpBarRef} style={{ background: 'linear-gradient(90deg, #8b0000, #ff0044)', height: '100%', width: '100%', transition: 'width 0.1s linear' }}></div>
+            </div>
+          </div>
+
+          {/* Pause Overlay */}
+          <div ref={pauseOverlayRef} style={{ display: 'none', position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 50, alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)' }}>
+            <div style={{ textAlign: 'center' }}>
+              <h1 style={{ color: '#fff', fontSize: '32px', fontFamily: 'var(--font-heading)', letterSpacing: '2px', textShadow: '0 0 15px #bd00ff', margin: 0 }}>PAUSED</h1>
+              <button 
+                onClick={() => engineRef.current?.togglePause()}
+                style={{ marginTop: '20px', padding: '10px 30px', background: 'linear-gradient(135deg, #bd00ff, #ff0066)', border: 'none', color: '#fff', fontWeight: 'bold', cursor: 'pointer', borderRadius: '4px' }}
+              >
+                RESUME
+              </button>
+            </div>
           </div>
 
           {/* Touch joystick visual */}
