@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { 
   Lock, 
   Play,
-  Film,
   ExternalLink, 
   Copy, 
   Check, 
@@ -101,17 +100,7 @@ export function HubView({
     synth.playClick();
   };
 
-  const handleUnlockTrailer2 = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!onUnlockItem) return;
-    if (orochimaruTokens < 100) {
-      synth.playSnake();
-      alert("Inadequate Shinobi Points! Earn more PTS in Serpent Fury or Ryuchi Cave Trials.");
-      return;
-    }
-    const success = onUnlockItem('trailer2', 100);
-    if (success) { synth.playRumble(); } else { synth.playSnake(); }
-  };
+
 
   const handleUnlockLab = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -161,7 +150,6 @@ export function HubView({
     if (success) { synth.playRumble(); } else { synth.playSnake(); }
   };
 
-  const isTrailer2Unlocked = unlockedItems.includes('trailer2');
   const isTrailer3Unlocked = unlockedItems.includes('trailer3');
   const isTrailer4Unlocked = unlockedItems.includes('trailer4');
   const isLabUnlocked = unlockedItems.includes('game_lab');

@@ -74,8 +74,49 @@ export class GameEngine {
     this.enemyImg = new Image();
     this.enemyImg.src = '/assets/enemy-anbu-ninja.png';
 
-    this.bossImg = new Image();
-    this.bossImg.src = '/assets/hokage-boss.png';
+    const rawBossImg = new Image();
+    rawBossImg.src = '/assets/hokage-boss.png';
+    rawBossImg.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = rawBossImg.naturalWidth;
+      canvas.height = rawBossImg.naturalHeight;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.drawImage(rawBossImg, 0, 0);
+        try {
+          const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const data = imgData.data;
+          for (let i = 0; i < data.length; i += 4) {
+            const r = data[i];
+            const g = data[i + 1];
+            const b = data[i + 2];
+            
+            // Calculate distance to pure magenta (255, 0, 255)
+            const diffR = r - 255;
+            const diffG = g - 0;
+            const diffB = b - 255;
+            const dist = Math.sqrt(diffR * diffR + diffG * diffG + diffB * diffB);
+            
+            if (dist < 150) {
+              data[i + 3] = 0; // Transparent
+            }
+          }
+          ctx.putImageData(imgData, 0, 0);
+          
+          const processedImg = new Image();
+          processedImg.src = canvas.toDataURL('image/png');
+          this.bossImg = processedImg;
+        } catch (e) {
+          console.error("Error keying out background color from Hokage boss sprite:", e);
+          this.bossImg = rawBossImg;
+        }
+      } else {
+        this.bossImg = rawBossImg;
+      }
+    };
+    rawBossImg.onerror = () => {
+      this.bossImg = rawBossImg;
+    };
   }
 
   setupInput(): void {
@@ -352,147 +393,158 @@ export class GameEngine {
   update(now: number): void {
     if (this.gameState !== GameState.PLAYING) return;
 
-    // Spawn wave
+    // Spawn wave handling with preparation countdown
     if (!this.waveSpawned) {
-      this.enemies = spawnWave(this.stats.wave, this.canvas.width, this.canvas.height);
-      this.waveSpawned = true;
+      if (this.waveDelay === 0) {
+        this.waveDelay = now + 3000; // 3 seconds preparation time
+      }
+      
+      if (now >= this.waveDelay) {
+        this.enemies = spawnWave(this.stats.wave, this.canvas.width, this.canvas.height);
+        this.waveSpawned = true;
+        this.waveDelay = 0;
+      }
     }
 
     // Update player (incorporating touchVector for free 2D movement)
     this.player.update(this.canvas.width, this.canvas.height, this.touchVector);
 
-    // Update enemies
-    for (const enemy of this.enemies) {
-      const result = updateEnemy(enemy, this.player.state, now);
-      if (result.attacking) {
-        if (!this.player.isDashing) {
-          this.player.takeDamage(enemy.damage);
-          this.shakeIntensity = 12; // Shake camera!
-          this.spawnFloatingText(`-${enemy.damage}`, this.player.state.x + this.player.state.width / 2, this.player.state.y - 15, '#ff3333', 18);
-          this.spawnHitParticles(
-            this.player.state.x + this.player.state.width / 2,
-            this.player.state.y + this.player.state.height / 2,
-            '#ff0000'
-          );
-          this.audio.playPlayerHit();
-        }
-      }
-    }
-
-    // Update projectiles
-    this.projectiles = this.projectiles.filter(p => {
-      if (p.attackName === 'Edo Tensei') {
-        p.width += 8; // expand radius
-        if (p.width >= 250) return false; // expire when reaches max radius
-      } else {
-        p.x += p.speed;
-        if (p.x < -100 || p.x > this.canvas.width + 100) return false;
-      }
-      
-      if (now - p.createdAt > p.lifetime) return false;
-      return true;
-    });
-
-    // Collision: projectiles vs enemies
-    for (const proj of this.projectiles) {
-      if (!proj.hitEnemyIds) {
-        proj.hitEnemyIds = [];
-      }
+    // Only update enemies and projectile collisions if the wave has spawned
+    if (this.waveSpawned) {
+      // Update enemies
       for (const enemy of this.enemies) {
-        // Skip if this enemy has already been hit by this projectile
-        if (proj.hitEnemyIds.includes(enemy.id)) continue;
-
-        const isEdo = proj.attackName === 'Edo Tensei';
-        let collided = false;
-
-        if (isEdo) {
-          // Circle collision check: dist from cast center to enemy center
-          const ecx = enemy.x + enemy.width / 2;
-          const ecy = enemy.y + enemy.height / 2;
-          const dist = Math.hypot(ecx - proj.x, ecy - proj.y);
-          collided = dist <= proj.width; // width acts as radius
-        } else {
-          collided = (
-            proj.x < enemy.x + enemy.width &&
-            proj.x + proj.width > enemy.x &&
-            proj.y < enemy.y + enemy.height &&
-            proj.y + proj.height > enemy.y
-          );
-        }
-
-        if (collided) {
-          enemy.hp -= proj.damage;
-          enemy.isHit = true;
-          enemy.hitTime = now;
-          this.spawnHitParticles(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, proj.color);
-          this.audio.playEnemyHit();
-
-          proj.hitEnemyIds.push(enemy.id);
-
-          const isUlt = proj.attackName === 'Edo Tensei';
-          this.spawnFloatingText(`-${proj.damage}`, enemy.x + enemy.width / 2, enemy.y - 10, proj.color, isUlt ? 22 : 16);
-
-          // If it's not a piercing attack, destroy the projectile
-          const isPiercing = proj.attackName === 'Kusanagi' || proj.attackName === 'Edo Tensei';
-          if (!isPiercing) {
-            proj.lifetime = 0; // Remove projectile
-            break; // Stop checking other enemies for this projectile
+        const result = updateEnemy(enemy, this.player.state, now);
+        if (result.attacking) {
+          if (!this.player.isDashing) {
+            this.player.takeDamage(enemy.damage);
+            this.shakeIntensity = 12; // Shake camera!
+            this.spawnFloatingText(`-${enemy.damage}`, this.player.state.x + this.player.state.width / 2, this.player.state.y - 15, '#ff3333', 18);
+            this.spawnHitParticles(
+              this.player.state.x + this.player.state.width / 2,
+              this.player.state.y + this.player.state.height / 2,
+              '#ff0000'
+            );
+            this.audio.playPlayerHit();
           }
         }
       }
-    }
 
-    // Remove dead enemies and spawn death animations
-    const deadEnemies = this.enemies.filter(e => e.hp <= 0);
-    for (const dead of deadEnemies) {
-      this.spawnDeathAnimation(dead);
-      this.trySpawnDrop(dead.x + dead.width / 2, dead.y + dead.height - 10);
-    }
-    this.enemies = this.enemies.filter(e => e.hp > 0);
-    const killed = deadEnemies.length;
-    this.stats.kills += killed;
-    this.stats.score += killed * 100 * this.stats.wave;
+      // Update projectiles
+      this.projectiles = this.projectiles.filter(p => {
+        if (p.attackName === 'Edo Tensei') {
+          p.width += 8; // expand radius
+          if (p.width >= 250) return false; // expire when reaches max radius
+        } else {
+          p.x += p.speed;
+          if (p.x < -100 || p.x > this.canvas.width + 100) return false;
+        }
+        
+        if (now - p.createdAt > p.lifetime) return false;
+        return true;
+      });
 
-    // Track boss HP for HUD
-    const isBossWave = this.stats.wave === 7;
-    if (isBossWave) {
-      const boss = this.enemies.find(e => e.type === EnemyType.KAGE);
-      this.stats.isBossWave = true;
-      this.stats.bossName = '🔥 SHADOW KAGE';
-      if (boss) {
-        this.stats.bossHp = boss.hp;
-        this.stats.bossMaxHp = boss.maxHp;
+      // Collision: projectiles vs enemies
+      for (const proj of this.projectiles) {
+        if (!proj.hitEnemyIds) {
+          proj.hitEnemyIds = [];
+        }
+        for (const enemy of this.enemies) {
+          // Skip if this enemy has already been hit by this projectile
+          if (proj.hitEnemyIds.includes(enemy.id)) continue;
+
+          const isEdo = proj.attackName === 'Edo Tensei';
+          let collided = false;
+
+          if (isEdo) {
+            // Circle collision check: dist from cast center to enemy center
+            const ecx = enemy.x + enemy.width / 2;
+            const ecy = enemy.y + enemy.height / 2;
+            const dist = Math.hypot(ecx - proj.x, ecy - proj.y);
+            collided = dist <= proj.width; // width acts as radius
+          } else {
+            collided = (
+              proj.x < enemy.x + enemy.width &&
+              proj.x + proj.width > enemy.x &&
+              proj.y < enemy.y + enemy.height &&
+              proj.y + proj.height > enemy.y
+            );
+          }
+
+          if (collided) {
+            enemy.hp -= proj.damage;
+            enemy.isHit = true;
+            enemy.hitTime = now;
+            this.spawnHitParticles(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, proj.color);
+            this.audio.playEnemyHit();
+
+            proj.hitEnemyIds.push(enemy.id);
+
+            const isUlt = proj.attackName === 'Edo Tensei';
+            this.spawnFloatingText(`-${proj.damage}`, enemy.x + enemy.width / 2, enemy.y - 10, proj.color, isUlt ? 22 : 16);
+
+            // If it's not a piercing attack, destroy the projectile
+            const isPiercing = proj.attackName === 'Kusanagi' || proj.attackName === 'Edo Tensei';
+            if (!isPiercing) {
+              proj.lifetime = 0; // Remove projectile
+              break; // Stop checking other enemies for this projectile
+            }
+          }
+        }
+      }
+
+      // Remove dead enemies and spawn death animations
+      const deadEnemies = this.enemies.filter(e => e.hp <= 0);
+      for (const dead of deadEnemies) {
+        this.spawnDeathAnimation(dead);
+        this.trySpawnDrop(dead.x + dead.width / 2, dead.y + dead.height - 10);
+      }
+      this.enemies = this.enemies.filter(e => e.hp > 0);
+      const killed = deadEnemies.length;
+      this.stats.kills += killed;
+      this.stats.score += killed * 100 * this.stats.wave;
+
+      // Track boss HP for HUD
+      const isBossWave = this.stats.wave === 7;
+      if (isBossWave) {
+        const boss = this.enemies.find(e => e.type === EnemyType.KAGE);
+        this.stats.isBossWave = true;
+        this.stats.bossName = '🔥 SHADOW KAGE';
+        if (boss) {
+          this.stats.bossHp = boss.hp;
+          this.stats.bossMaxHp = boss.maxHp;
+        } else {
+          this.stats.bossHp = 0;
+          this.stats.bossMaxHp = undefined;
+        }
       } else {
-        this.stats.bossHp = 0;
+        this.stats.isBossWave = false;
+        this.stats.bossHp = undefined;
         this.stats.bossMaxHp = undefined;
+        this.stats.bossName = undefined;
       }
-    } else {
-      this.stats.isBossWave = false;
-      this.stats.bossHp = undefined;
-      this.stats.bossMaxHp = undefined;
-      this.stats.bossName = undefined;
-    }
 
-    // Check wave complete
-    if (this.enemies.length === 0 && this.waveSpawned) {
-      if (this.stats.wave >= this.stats.maxWave) {
-        this.gameState = GameState.VICTORY;
-        this.saveHighScore();
-        this.audio.playVictory();
+      // Check wave complete
+      if (this.enemies.length === 0) {
+        if (this.stats.wave >= this.stats.maxWave) {
+          this.gameState = GameState.VICTORY;
+          this.saveHighScore();
+          this.audio.playVictory();
+          this.onStateChange(this.gameState, this.stats);
+          cancelAnimationFrame(this.animationId);
+          return;
+        }
+        const completedWave = this.stats.wave;
+        this.stats.wave++;
+        this.waveSpawned = false;
+        this.waveDelay = 0; // will trigger countdown on next frame
+        this.audio.playWaveComplete();
+        
+        if (completedWave === 1) {
+          this.gameState = GameState.PAUSED;
+        }
+        
         this.onStateChange(this.gameState, this.stats);
-        cancelAnimationFrame(this.animationId);
-        return;
       }
-      const completedWave = this.stats.wave;
-      this.stats.wave++;
-      this.waveSpawned = false;
-      this.audio.playWaveComplete();
-      
-      if (completedWave === 1) {
-        this.gameState = GameState.PAUSED;
-      }
-      
-      this.onStateChange(this.gameState, this.stats);
     }
 
     // Check player death
@@ -937,6 +989,67 @@ export class GameEngine {
 
     // Restore screen shake offsets
     ctx.restore();
+
+    // Draw Wave Announcement (after restore so it remains centered and immune to shake)
+    if (!this.waveSpawned && this.waveDelay > 0) {
+      const remainingMs = this.waveDelay - Date.now();
+      if (remainingMs > 0) {
+        const secs = Math.ceil(remainingMs / 1000);
+        
+        ctx.save();
+        // Dark backdrop bars for cinematic effect
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.65)';
+        ctx.fillRect(0, canvas.height * 0.38, canvas.width, canvas.height * 0.24);
+        
+        // Neon borders
+        ctx.strokeStyle = this.stats.wave === 7 ? '#ff0044' : '#00ff41';
+        ctx.shadowColor = ctx.strokeStyle;
+        ctx.shadowBlur = 15;
+        ctx.lineWidth = 3;
+        
+        ctx.beginPath();
+        ctx.moveTo(0, canvas.height * 0.38);
+        ctx.lineTo(canvas.width, canvas.height * 0.38);
+        ctx.moveTo(0, canvas.height * 0.62);
+        ctx.lineTo(canvas.width, canvas.height * 0.62);
+        ctx.stroke();
+        
+        // Main Text
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        
+        if (this.stats.wave === 7) {
+          ctx.fillStyle = '#ff0044';
+          ctx.font = 'bold italic 34px Impact, sans-serif';
+          ctx.fillText('FINAL BOSS: SHADOW KAGE', canvas.width / 2, canvas.height * 0.45);
+        } else {
+          ctx.fillStyle = '#00ff41';
+          ctx.font = 'bold italic 44px Impact, sans-serif';
+          ctx.fillText(`WAVE ${this.stats.wave}`, canvas.width / 2, canvas.height * 0.45);
+        }
+        
+        // Subtext
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 16px sans-serif';
+        ctx.shadowBlur = 0; // no shadow for small text for readability
+        const subtext = this.stats.wave === 7 ? '⚠️ DEFEAT THE FOURTH HOKAGE!' : 'INCOMING ENEMIES... PREPARE!';
+        ctx.fillText(subtext, canvas.width / 2, canvas.height * 0.52);
+        
+        // Countdown
+        const pulse = 1 + (1 - (remainingMs % 1000) / 1000) * 0.25;
+        ctx.save();
+        ctx.translate(canvas.width / 2, canvas.height * 0.575);
+        ctx.scale(pulse, pulse);
+        ctx.fillStyle = '#ffd700';
+        ctx.font = 'bold italic 22px Impact, sans-serif';
+        ctx.shadowColor = '#ffd700';
+        ctx.shadowBlur = 8;
+        ctx.fillText(secs.toString(), 0, 0);
+        ctx.restore();
+        
+        ctx.restore();
+      }
+    }
   }
 
   resize(width: number, height: number): void {
