@@ -15,6 +15,56 @@ import './App.css';
 
 import { useState, useEffect } from 'react';
 
+interface RestrictedViewProps {
+  onExit: () => void;
+}
+
+function RestrictedView({ onExit }: RestrictedViewProps) {
+  return (
+    <div className="phone-restricted-bg">
+      <div className="phone-restricted-card animate-scale-in">
+        <div className="restricted-badge">ACCESS DENIED</div>
+        <h2 className="restricted-title">⚠️ SYSTEM LOCK</h2>
+        <p className="restricted-desc">
+          The simulation portal <strong>Serpent's Wrath</strong> has disabled access for mobile phone terminals.
+        </p>
+        <div className="restricted-divider" />
+        <p className="restricted-detail">
+          Phone displays are too compact to synchronize Orochimaru's complex combat seals.
+        </p>
+        <div className="authorized-platforms" style={{ marginBottom: '16px' }}>
+          <div className="platform-auth-item">🖥️ PC & Laptop (Authorized)</div>
+          <div className="platform-auth-item">📟 Tablet & iPad (Authorized)</div>
+        </div>
+        
+        <button 
+          onClick={onExit} 
+          className="featured-play-btn"
+          style={{ 
+            background: 'linear-gradient(135deg, #a855f7, #ffd700)', 
+            color: '#000',
+            fontWeight: 800,
+            border: 'none',
+            padding: '12px 20px',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            width: '100%',
+            marginBottom: '18px',
+            fontFamily: 'var(--font-heading)',
+            boxShadow: '0 4px 15px rgba(168, 85, 247, 0.25)'
+          }}
+        >
+          RETURN TO HUB
+        </button>
+
+        <p className="restricted-footer">
+          Please log in from a Tablet or PC terminal to participate in the simulation.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 function App() {
   const store = useGameStore();
   const [isPhone, setIsPhone] = useState(false);
@@ -56,31 +106,6 @@ function App() {
     }
   };
 
-  if (isPhone) {
-    return (
-      <div className="phone-restricted-bg">
-        <div className="phone-restricted-card">
-          <div className="restricted-badge">ACCESS DENIED</div>
-          <h2 className="restricted-title">⚠️ SYSTEM LOCK</h2>
-          <p className="restricted-desc">
-            The simulation portal <strong>Serpent's Wrath</strong> has disabled access for mobile phone terminals.
-          </p>
-          <div className="restricted-divider" />
-          <p className="restricted-detail">
-            Phone displays are too compact to synchronize Orochimaru's complex combat seals.
-          </p>
-          <div className="authorized-platforms">
-            <div className="platform-auth-item">🖥️ PC & Laptop (Authorized)</div>
-            <div className="platform-auth-item">📟 Tablet & iPad (Authorized)</div>
-          </div>
-          <p className="restricted-footer">
-            Please log in from a Tablet or PC terminal to participate in the simulation.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   const isWidescreen = store.currentView === 'game2_web' || store.currentView === 'leaderboard';
   const containerClass = isWidescreen ? 'widescreen-viewport-container' : 'mobile-viewport-container';
 
@@ -108,16 +133,24 @@ function App() {
           />
         ) : store.currentView === 'game2_web' ? (
           /* Game V2 Web Version */
-          <SerpentsWrathWebView 
-            onExit={() => store.setCurrentView('hub')} 
-            onGoToLeaderboard={() => store.setCurrentView('leaderboard')}
-          />
+          isPhone ? (
+            <RestrictedView onExit={() => store.setCurrentView('hub')} />
+          ) : (
+            <SerpentsWrathWebView 
+              onExit={() => store.setCurrentView('hub')} 
+              onGoToLeaderboard={() => store.setCurrentView('leaderboard')}
+            />
+          )
         ) : store.currentView === 'game2_mobile' ? (
           /* Game V2 Mobile Version */
-          <SerpentsWrathView 
-            onExit={() => store.setCurrentView('hub')} 
-            onGoToLeaderboard={() => store.setCurrentView('leaderboard')}
-          />
+          isPhone ? (
+            <RestrictedView onExit={() => store.setCurrentView('hub')} />
+          ) : (
+            <SerpentsWrathView 
+              onExit={() => store.setCurrentView('hub')} 
+              onGoToLeaderboard={() => store.setCurrentView('leaderboard')}
+            />
+          )
         ) : store.currentView === 'leaderboard' ? (
           /* Orochi Ledger — Shared Ecosystem Leaderboard */
           <LeaderboardView
@@ -126,15 +159,19 @@ function App() {
           />
         ) : store.currentView === 'cave_trials' ? (
           /* Game V3: Ryuchi Cave Survival (Standalone) */
-          <div className="game-v1-wrapper">
-            <CombatView
-              reanimations={store.reanimations}
-              combatHighScore={store.combatHighScore}
-              updateCombatHighScore={store.updateCombatHighScore}
-              addTokens={store.addTokens}
-              onExit={() => store.setCurrentView('hub')}
-            />
-          </div>
+          isPhone ? (
+            <RestrictedView onExit={() => store.setCurrentView('hub')} />
+          ) : (
+            <div className="game-v1-wrapper">
+              <CombatView
+                reanimations={store.reanimations}
+                combatHighScore={store.combatHighScore}
+                updateCombatHighScore={store.updateCombatHighScore}
+                addTokens={store.addTokens}
+                onExit={() => store.setCurrentView('hub')}
+              />
+            </div>
+          )
         ) : (
           /* Game V1 view container (Laboratory & Edo Altar) */
           <div className="game-v1-wrapper">
