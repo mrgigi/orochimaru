@@ -202,6 +202,7 @@ export function SerpentsWrathView({ onExit, onGoToLeaderboard }: SerpentsWrathVi
           
           let earned = 0;
           if (stats.wave > 3) earned += 25;
+          if (stats.weeklyChallengeCompleted) earned += 50; // Weekly challenge bonus
           if (earned > 0) store.addTokens(earned);
           store.recordRun(stats.wave);
           
@@ -213,19 +214,20 @@ export function SerpentsWrathView({ onExit, onGoToLeaderboard }: SerpentsWrathVi
           setFinalWaves(7);
           
           let earned = 25 + 100 + 50; // Wave 3 + Victory + Boss
+          if (stats.weeklyChallengeCompleted) earned += 50; // Weekly challenge bonus
           store.addTokens(earned);
           store.recordRun(8);
           
           setScreen('victory');
           synth.playRumble();
         }
-      });
+      }, store.unlockedItems);
 
       engine.audio.setMuted(store.muteAudio);
       engineRef.current = engine;
       engine.start();
     }, 80);
-  }, [store.muteAudio]);
+  }, [store.muteAudio, store.unlockedItems]);
 
   // Synchronize audio mute state with the engine
   useEffect(() => {

@@ -44,6 +44,7 @@ export class GameEngine {
   // Summon Bar
   public summonCharge: number = 0;
   public maxSummonCharge: number = 5;
+  public unlockedReanimations: string[] = []; // Tracks unlocked reanimation types
   private activeSummons: Array<{ type: string; startTime: number; duration: number; x: number; y: number; timer: number }> = [];
 
   // Images
@@ -67,15 +68,17 @@ export class GameEngine {
 
   constructor(
     canvas: HTMLCanvasElement,
-    onStateChange: (state: GameState, stats: GameStats) => void
+    onStateChange: (state: GameState, stats: GameStats) => void,
+    unlockedItems: string[] = []
   ) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d')!;
     this.player = new Player(canvas.width, canvas.height);
     this.onStateChange = onStateChange;
+    this.unlockedReanimations = unlockedItems;
 
     const highScore = parseInt(localStorage.getItem('orochimaru_highscore') || '0', 10);
-    this.stats = { score: 0, kills: 0, wave: 1, maxWave: 7, highScore };
+    this.stats = { score: 0, kills: 0, wave: 1, maxWave: 7, highScore, weeklyChallengeCompleted: false };
 
     this.audio = new AudioManager();
     this.loadImages();
@@ -767,6 +770,14 @@ export class GameEngine {
     this.spawnFloatingText(names[type] ?? 'SUMMON!', this.canvas.width / 2, this.canvas.height * 0.2, '#ffd700', 24);
 
     return true;
+  }
+
+  /** Called when player presses F — picks the best unlocked reanimation */
+  attemptSummon(): boolean {
+    if (this.summonCharge < this.maxSummonCharge) return false;
+    const priority: Array<'hashirama' | 'tobirama' | 'kimimaro' | 'tayuya'> = ['hashirama', 'tobirama', 'kimimaro', 'tayuya'];
+    const pick = priority.find(r => this.unlockedReanimations.includes(r)) ?? 'tayuya';
+    return this.triggerSummon(pick);
   }
 
   saveHighScore(): void {

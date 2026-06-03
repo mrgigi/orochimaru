@@ -160,6 +160,7 @@ export interface GameStats {
   wave: number;
   maxWave: number;
   highScore: number;
+  weeklyChallengeCompleted?: boolean;
   bossHp?: number;
   bossMaxHp?: number;
   bossName?: string;
