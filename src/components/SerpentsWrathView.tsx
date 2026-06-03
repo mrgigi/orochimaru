@@ -13,7 +13,7 @@ import { GameEngine } from '../game/sw/GameEngine';
 import { GameState } from '../game/sw/types';
 import { synth } from '../audio/SynthManager';
 import orochimaruFace from '../assets/orochimaru_face.png';
-import { useGameStore } from '../hooks/useGameStore';
+import { useGameStore, WEEKLY_CHALLENGE } from '../hooks/useGameStore';
 import { supabase } from '../lib/supabaseClient';
 import { COUNTRIES } from '../lib/countries';
 
@@ -72,15 +72,15 @@ export function SerpentsWrathView({ onExit, onGoToLeaderboard }: SerpentsWrathVi
   const [finalWaves, setFinalWaves] = useState(0);
   const [topScores, setTopScores] = useState<{name: string, score: number, waves: number}[]>([]);
   const [swHighScore, setSwHighScore] = useState(0);
-  const [showGiftModal, setShowGiftModal] = useState(false);
+
 
   // Leaderboard and high score reset
   useEffect(() => {
-    const isReset = localStorage.getItem('orochimaru_leaderboard_reset_v4');
+    const isReset = localStorage.getItem('orochimaru_leaderboard_reset_v5');
     if (!isReset) {
       localStorage.setItem('orochimaru_leaderboard', JSON.stringify([]));
       localStorage.setItem('orochimaru_highscore', '0');
-      localStorage.setItem('orochimaru_leaderboard_reset_v4', 'true');
+      localStorage.setItem('orochimaru_leaderboard_reset_v5', 'true');
     }
   }, []);
 
@@ -199,18 +199,25 @@ export function SerpentsWrathView({ onExit, onGoToLeaderboard }: SerpentsWrathVi
           setFinalScore(stats.score);
           setFinalKills(stats.kills);
           setFinalWaves(stats.wave);
+          
+          let earned = 0;
+          if (stats.wave > 3) earned += 25;
+          if (earned > 0) store.addTokens(earned);
+          store.recordRun(stats.wave);
+          
           setScreen('gameover');
           synth.playSnake();
         } else if (state === GameState.VICTORY) {
           setFinalScore(stats.score);
           setFinalKills(stats.kills);
           setFinalWaves(7);
+          
+          let earned = 25 + 100 + 50; // Wave 3 + Victory + Boss
+          store.addTokens(earned);
+          store.recordRun(8);
+          
           setScreen('victory');
           synth.playRumble();
-        } else if (state === GameState.PAUSED) {
-          if (stats.wave === 2) {
-            setShowGiftModal(true);
-          }
         }
       });
 
@@ -539,6 +546,23 @@ export function SerpentsWrathView({ onExit, onGoToLeaderboard }: SerpentsWrathVi
               </div>
               <p className="sw-start-pill-desc">The Immortal Serpent of DeFi — Shedding Limits, Gaining Power</p>
             </div>
+
+            {/* Weekly Challenge Banner */}
+            <div style={{ margin: '8px 0 6px', background: 'rgba(253,186,116,0.08)', border: '1px solid rgba(253,186,116,0.3)', borderRadius: '8px', padding: '7px 10px', textAlign: 'left' }}>
+              <div style={{ fontSize: '8px', color: '#fbbf24', letterSpacing: '2px', marginBottom: '2px' }}>🏆 WEEKLY CHALLENGE</div>
+              <div style={{ fontSize: '11px', color: '#fff', fontWeight: 'bold', marginBottom: '2px' }}>{WEEKLY_CHALLENGE.title}</div>
+              <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.6)', lineHeight: 1.3 }}>{WEEKLY_CHALLENGE.description}</div>
+              <div style={{ fontSize: '8px', color: '#fbbf24', marginTop: '3px' }}>+{WEEKLY_CHALLENGE.bonusPts} PTS · Expires {WEEKLY_CHALLENGE.expiresAt}</div>
+            </div>
+
+            {/* Streak Indicator */}
+            {store.survivalStreak > 0 && (
+              <div className="sw-streak-indicator" style={{ marginBottom: 15, fontSize: '0.85rem', color: '#f59e0b', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}>
+                <span style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '4px 10px', borderRadius: '12px', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
+                  Streak: {store.survivalStreak}/3 🔥
+                </span>
+              </div>
+            )}
 
             {/* Enter Arena Button */}
             <button onClick={startGame} className="sw-start-arena-btn">
@@ -940,42 +964,7 @@ export function SerpentsWrathView({ onExit, onGoToLeaderboard }: SerpentsWrathVi
           </div>
         </div>
       )}
-      {showGiftModal && (
-        <div className="gift-modal-overlay">
-          <div className="gift-modal-card animate-scale-in">
-            <div className="gift-icon-glow">🎁</div>
-            <h2 className="gift-title">SHINOBI GIFT UNLOCKED!</h2>
-            <p className="gift-desc">
-              Congratulations, Genin! You successfully survived the first raid wave.
-            </p>
-            <div className="gift-reward-box">
-              <span className="gift-reward-label">YOUR REWARD</span>
-              <strong className="gift-reward-value">+250 PTS</strong>
-            </div>
-            <div className="gift-promo-banner">
-              <div className="promo-text-highlight">🏆 LIMITED TIME QUEST:</div>
-              <p className="promo-details">
-                First person to gather all <strong>5 Forbidden NFTs</strong> gets a <strong>$100 Cash reward!</strong>
-              </p>
-              <p className="promo-encourage">
-                Keep playing to win more PTS, reanimate stronger legends, and claim your glory!
-              </p>
-            </div>
-            <button 
-              onClick={() => {
-                store.addTokens(250);
-                if (engineRef.current) {
-                  engineRef.current.resume();
-                }
-                setShowGiftModal(false);
-              }}
-              className="gift-claim-btn"
-            >
-              CLAIM PTS & CONTINUE BATTLE
-            </button>
-          </div>
-        </div>
-      )}
+
     </div>
   );
 }

@@ -28,6 +28,24 @@ export class GameEngine {
   private dropIdCounter = 0;
   private textIdCounter = 0;
 
+  // Boss Phase & Enrage System
+  private bossPhase2Triggered: boolean = false;
+  private bossEnraged: boolean = false;
+  private bossStartTime: number = 0;
+  private lastBossProjectileTime: number = 0;
+
+  // Wave Intro Card
+  private waveIntroActive: boolean = false;
+  private waveIntroText: string = '';
+  private waveIntroStartTime: number = 0;
+  private waveIntroDuration: number = 2200; // ms
+  private waveIntroShown: Set<number> = new Set();
+
+  // Summon Bar
+  public summonCharge: number = 0;
+  public maxSummonCharge: number = 5;
+  private activeSummons: Array<{ type: string; startTime: number; duration: number; x: number; y: number; timer: number }> = [];
+
   // Images
   bgImg: HTMLImageElement | null = null;
   playerImg: HTMLImageElement | null = null;
@@ -501,9 +519,14 @@ export class GameEngine {
       this.enemies = this.enemies.filter(e => e.hp > 0);
       const killed = deadEnemies.length;
       this.stats.kills += killed;
-      this.stats.score += killed * 100 * this.stats.wave;
+      this.stats.score += killed * 5 * this.stats.wave;
 
-      // Track boss HP for HUD
+      // Fill summon charge on kills (1 kill = 1 charge, max 5)
+      if (killed > 0) {
+        this.summonCharge = Math.min(this.maxSummonCharge, this.summonCharge + killed);
+      }
+
+      // Track boss HP for HUD + Phase 2 + Projectiles + Enrage
       const isBossWave = this.stats.wave === 7;
       if (isBossWave) {
         const boss = this.enemies.find(e => e.type === EnemyType.KAGE);
@@ -512,6 +535,64 @@ export class GameEngine {
         if (boss) {
           this.stats.bossHp = boss.hp;
           this.stats.bossMaxHp = boss.maxHp;
+
+          // Start tracking boss fight time the first time we see the boss
+          if (this.bossStartTime === 0) this.bossStartTime = now;
+
+          // ── Phase 2: HP drops to ≤ 300 ─────────────────
+          if (!this.bossPhase2Triggered && boss.hp <= 300) {
+            this.bossPhase2Triggered = true;
+            boss.speed = 3.0;
+            boss.attackCooldown = 500;
+            boss.color = '#ff3300';
+            this.stats.bossName = '💀 SHADOW KAGE [PHASE 2]';
+            this.shakeIntensity = 20;
+            this.audio.playWaveComplete();
+            this.spawnFloatingText('PHASE 2!', this.canvas.width / 2, this.canvas.height * 0.3, '#ff3300', 28);
+          }
+
+          // ── Enrage: 90 seconds into boss fight ─────────
+          if (!this.bossEnraged && this.bossStartTime > 0 && now - this.bossStartTime > 90000) {
+            this.bossEnraged = true;
+            boss.speed = 3.5;
+            boss.attackCooldown = 400;
+            boss.color = '#8800ff';
+            this.stats.bossName = '☠️ SHADOW KAGE [ENRAGED]';
+            this.shakeIntensity = 25;
+            this.audio.playEnrage();
+            this.spawnFloatingText('ENRAGED!', this.canvas.width / 2, this.canvas.height * 0.25, '#8800ff', 32);
+          }
+
+          // ── Boss Projectiles: HP ≤ 400 ──────────────────
+          const projInterval = this.bossEnraged ? 1200 : 2000;
+          if (boss.hp <= 400 && now - this.lastBossProjectileTime > projInterval) {
+            this.lastBossProjectileTime = now;
+            const spreadCount = this.bossEnraged ? 3 : 1;
+            const angles = spreadCount === 3 ? [-0.35, 0, 0.35] : [0];
+            const px = boss.x;
+            const py = boss.y + boss.height / 2;
+            const dx = this.player.state.x - px;
+            const dy = this.player.state.y - py;
+            angles.forEach((offset, i) => {
+              const angle = Math.atan2(dy, dx) + offset;
+              this.projectiles.push({
+                id: `boss_proj_${now}_${i}`,
+                x: px,
+                y: py,
+                width: 14,
+                height: 14,
+                speed: 3.5,
+                damage: 20,
+                color: '#ff0066',
+                attackName: 'BossOrb',
+                lifetime: 3000,
+                createdAt: now,
+                vx: Math.cos(angle) * 3.5,
+                vy: Math.sin(angle) * 3.5,
+                isBossProjectile: true,
+              } as any);
+            });
+          }
         } else {
           this.stats.bossHp = 0;
           this.stats.bossMaxHp = undefined;
@@ -521,6 +602,10 @@ export class GameEngine {
         this.stats.bossHp = undefined;
         this.stats.bossMaxHp = undefined;
         this.stats.bossName = undefined;
+        // Reset boss state when not a boss wave
+        this.bossPhase2Triggered = false;
+        this.bossEnraged = false;
+        this.bossStartTime = 0;
       }
 
       // Check wave complete
@@ -533,19 +618,59 @@ export class GameEngine {
           cancelAnimationFrame(this.animationId);
           return;
         }
-        const completedWave = this.stats.wave;
         this.stats.wave++;
         this.waveSpawned = false;
-        this.waveDelay = 0; // will trigger countdown on next frame
+        this.waveDelay = 0;
         this.audio.playWaveComplete();
-        
-        if (completedWave === 1) {
-          this.gameState = GameState.PAUSED;
+
+        // Wave Intro Cards for waves 3, 6, and 7 (boss)
+        const waveIntros: Record<number, string> = {
+          3: 'WAVE 3 — THE CHUNIN SURGE',
+          6: 'WAVE 6 — JONIN ELITE ASSAULT',
+          7: 'FINAL WAVE — SHADOW KAGE AWAKENS',
+        };
+        const introText = waveIntros[this.stats.wave];
+        if (introText && !this.waveIntroShown.has(this.stats.wave)) {
+          this.waveIntroShown.add(this.stats.wave);
+          this.waveIntroActive = true;
+          this.waveIntroText = introText;
+          this.waveIntroStartTime = now;
+          this.audio.playWaveIntro();
         }
-        
+
         this.onStateChange(this.gameState, this.stats);
       }
     }
+
+    // Update boss projectiles (move toward player angle)
+    this.projectiles = this.projectiles.filter(proj => {
+      if ((proj as any).isBossProjectile) {
+        proj.x += (proj as any).vx;
+        proj.y += (proj as any).vy;
+        proj.lifetime -= 16;
+        if (proj.lifetime <= 0) return false;
+        // Check collision with player
+        const px = this.player.state.x + this.player.state.width / 2;
+        const py = this.player.state.y + this.player.state.height / 2;
+        const dist = Math.hypot(px - proj.x, py - proj.y);
+        if (dist < 24 && !this.player.isDashing) {
+          this.player.takeDamage(proj.damage);
+          this.shakeIntensity = 10;
+          this.audio.playPlayerHit();
+          return false;
+        }
+        return true;
+      }
+      return true;
+    });
+
+    // Expire wave intro card
+    if (this.waveIntroActive && now - this.waveIntroStartTime > this.waveIntroDuration) {
+      this.waveIntroActive = false;
+    }
+
+    // Update active summons (expire after duration)
+    this.activeSummons = this.activeSummons.filter(s => now - s.startTime < s.duration);
 
     // Check player death
     if (this.player.state.hp <= 0) {
@@ -621,6 +746,29 @@ export class GameEngine {
     this.onStateChange(this.gameState, this.stats);
   }
 
+  triggerSummon(type: 'tayuya' | 'kimimaro' | 'tobirama' | 'hashirama'): boolean {
+    if (this.summonCharge < this.maxSummonCharge) return false;
+    this.summonCharge = 0;
+    this.audio.playSummon();
+    this.shakeIntensity = 8;
+
+    const now = Date.now();
+    const duration = 10000; // 10s
+
+    // Spawn the summon effect entity
+    this.activeSummons.push({ type, startTime: now, duration, x: this.canvas.width / 2, y: this.canvas.height / 2, timer: 0 });
+
+    const names: Record<string, string> = {
+      tayuya: '🎵 TAYUYA SUMMONED',
+      kimimaro: '🦴 KIMIMARO SUMMONED',
+      tobirama: '💧 TOBIRAMA SUMMONED',
+      hashirama: '🌿 HASHIRAMA SHIELD',
+    };
+    this.spawnFloatingText(names[type] ?? 'SUMMON!', this.canvas.width / 2, this.canvas.height * 0.2, '#ffd700', 24);
+
+    return true;
+  }
+
   saveHighScore(): void {
     if (this.stats.score > this.stats.highScore) {
       this.stats.highScore = this.stats.score;
@@ -649,7 +797,9 @@ export class GameEngine {
       isBossWave: this.stats.isBossWave,
       bossName: this.stats.bossName,
       bossHp: this.stats.bossHp,
-      bossMaxHp: this.stats.bossMaxHp
+      bossMaxHp: this.stats.bossMaxHp,
+      summonCharge: this.summonCharge,
+      maxSummonCharge: this.maxSummonCharge,
     };
   }
 
@@ -791,6 +941,25 @@ export class GameEngine {
       ctx.save();
       ctx.shadowColor = proj.color;
       ctx.shadowBlur = 15;
+
+      // Boss orb projectile
+      if ((proj as any).isBossProjectile) {
+        const now2 = Date.now();
+        const pulse = 0.8 + 0.2 * Math.sin(now2 * 0.01 + proj.x);
+        ctx.save();
+        ctx.shadowColor = '#ff0066';
+        ctx.shadowBlur = 20;
+        const grad = ctx.createRadialGradient(proj.x, proj.y, 2, proj.x, proj.y, proj.width);
+        grad.addColorStop(0, 'rgba(255, 200, 255, 0.9)');
+        grad.addColorStop(1, 'rgba(255, 0, 102, 0)');
+        ctx.beginPath();
+        ctx.arc(proj.x, proj.y, proj.width * pulse, 0, Math.PI * 2);
+        ctx.fillStyle = grad;
+        ctx.fill();
+        ctx.restore();
+        ctx.restore();
+        continue;
+      }
 
       if (proj.attackName === 'Kusanagi') {
         ctx.save();
@@ -954,7 +1123,23 @@ export class GameEngine {
       ctx.restore();
     }
 
-    // Draw player
+    // Draw player with chakra pulse glow ring
+    const chakraRatio = this.player.state.chakra / this.player.state.maxChakra;
+    if (chakraRatio > 0.1 && chakraRatio < 1.0) {
+      const px = this.player.state.x + this.player.state.width / 2;
+      const py = this.player.state.y + this.player.state.height / 2;
+      const pulseScale = 1 + 0.12 * Math.sin(Date.now() * 0.006);
+      const radius = (this.player.state.width * 0.7 + chakraRatio * 14) * pulseScale;
+      const gradient = ctx.createRadialGradient(px, py, radius * 0.4, px, py, radius);
+      gradient.addColorStop(0, `rgba(168, 85, 247, ${chakraRatio * 0.35})`);
+      gradient.addColorStop(1, 'rgba(168, 85, 247, 0)');
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(px, py, radius, 0, Math.PI * 2);
+      ctx.fillStyle = gradient;
+      ctx.fill();
+      ctx.restore();
+    }
     this.player.draw(ctx, this.playerImg);
 
     // Draw floating damage numbers
@@ -1054,6 +1239,31 @@ export class GameEngine {
         
         ctx.restore();
       }
+    }
+
+    // ── Wave Intro Card ─────────────────────────────────────────────────────
+    if (this.waveIntroActive) {
+      const elapsed = Date.now() - this.waveIntroStartTime;
+      const fadeIn = Math.min(1, elapsed / 300);
+      const fadeOut = elapsed > this.waveIntroDuration - 400
+        ? Math.max(0, (this.waveIntroDuration - elapsed) / 400)
+        : 1;
+      const alpha = fadeIn * fadeOut;
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      // Dark full-screen overlay
+      ctx.fillStyle = 'rgba(0,0,0,0.82)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      // Centered text
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      const isWave7 = this.waveIntroText.includes('FINAL');
+      ctx.fillStyle = isWave7 ? '#ff0044' : '#00ff41';
+      ctx.shadowColor = ctx.fillStyle;
+      ctx.shadowBlur = 30;
+      ctx.font = `bold italic ${Math.min(canvas.width / 12, 42)}px Impact, sans-serif`;
+      ctx.fillText(this.waveIntroText, canvas.width / 2, canvas.height / 2);
+      ctx.restore();
     }
   }
 

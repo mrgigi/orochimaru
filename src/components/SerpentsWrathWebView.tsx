@@ -13,7 +13,7 @@ import { GameEngine } from '../game/sw/GameEngine';
 import { GameState } from '../game/sw/types';
 import { synth } from '../audio/SynthManager';
 import orochimaruFace from '../assets/orochimaru_face.png';
-import { useGameStore } from '../hooks/useGameStore';
+import { useGameStore, WEEKLY_CHALLENGE } from '../hooks/useGameStore';
 import { supabase } from '../lib/supabaseClient';
 import { COUNTRIES } from '../lib/countries';
 
@@ -72,15 +72,15 @@ export function SerpentsWrathWebView({ onExit, onGoToLeaderboard }: SerpentsWrat
   const [finalWaves, setFinalWaves] = useState(0);
   const [topScores, setTopScores] = useState<{name: string, score: number, waves: number}[]>([]);
   const [swHighScore, setSwHighScore] = useState(0);
-  const [showGiftModal, setShowGiftModal] = useState(false);
+
 
   // Leaderboard and high score reset
   useEffect(() => {
-    const isReset = localStorage.getItem('orochimaru_leaderboard_reset_v4');
+    const isReset = localStorage.getItem('orochimaru_leaderboard_reset_v5');
     if (!isReset) {
       localStorage.setItem('orochimaru_leaderboard', JSON.stringify([]));
       localStorage.setItem('orochimaru_highscore', '0');
-      localStorage.setItem('orochimaru_leaderboard_reset_v4', 'true');
+      localStorage.setItem('orochimaru_leaderboard_reset_v5', 'true');
     }
   }, []);
 
@@ -162,6 +162,7 @@ export function SerpentsWrathWebView({ onExit, onGoToLeaderboard }: SerpentsWrat
   const bossHpContainerRef = useRef<HTMLDivElement>(null);
   const bossHpBarRef = useRef<HTMLDivElement>(null);
   const bossHpTextRef = useRef<HTMLSpanElement>(null);
+  const summonBarRef = useRef<HTMLDivElement>(null);
 
   const cdRefs = {
     snake_strike: useRef<HTMLDivElement>(null),
@@ -198,18 +199,25 @@ export function SerpentsWrathWebView({ onExit, onGoToLeaderboard }: SerpentsWrat
           setFinalScore(stats.score);
           setFinalKills(stats.kills);
           setFinalWaves(stats.wave); // stats.wave is 1-based (so 1 to 7)
+          
+          let earned = 0;
+          if (stats.wave > 3) earned += 25;
+          if (earned > 0) store.addTokens(earned);
+          store.recordRun(stats.wave);
+          
           setScreen('gameover');
           synth.playSnake();
         } else if (state === GameState.VICTORY) {
           setFinalScore(stats.score);
           setFinalKills(stats.kills);
           setFinalWaves(7);
+          
+          let earned = 25 + 100 + 50; // Wave 3 + Victory + Boss
+          store.addTokens(earned);
+          store.recordRun(8);
+          
           setScreen('victory');
           synth.playRumble();
-        } else if (state === GameState.PAUSED) {
-          if (stats.wave === 2) {
-            setShowGiftModal(true);
-          }
         }
       });
 
@@ -306,6 +314,15 @@ export function SerpentsWrathWebView({ onExit, onGoToLeaderboard }: SerpentsWrat
           } else {
             bossHpContainerRef.current.style.display = 'none';
           }
+        }
+
+        // Summon bar
+        if (summonBarRef.current && state.maxSummonCharge) {
+          const pct = Math.min(100, ((state.summonCharge ?? 0) / state.maxSummonCharge) * 100);
+          summonBarRef.current.style.width = `${pct}%`;
+          summonBarRef.current.style.background = pct >= 100
+            ? 'linear-gradient(90deg, #ffd700, #ff8c00)'
+            : 'linear-gradient(90deg, #a855f7, #6d28d9)';
         }
       }
 
@@ -444,7 +461,7 @@ export function SerpentsWrathWebView({ onExit, onGoToLeaderboard }: SerpentsWrat
           <ArrowLeft size={15} />
           <span>Hub</span>
         </button>
-        <div className="sw-web-title-center">
+        <div className="sw-web-title-center" style={{ opacity: screen === 'playing' ? 1 : 0, pointerEvents: 'none', transition: 'opacity 0.25s ease' }}>
           <span className="sw-web-subtitle">ECOSYSTEM COMBAT SIMULATOR</span>
           <h2 className="sw-web-game-title">SERPENT FURY</h2>
         </div>
@@ -476,74 +493,94 @@ export function SerpentsWrathWebView({ onExit, onGoToLeaderboard }: SerpentsWrat
         {screen === 'start' && (
           <div className="sw-web-screen start-screen">
             <div className="sw-start-content-new">
-              {/* Circular Avatar */}
-              <div className="sw-start-avatar-wrap">
-                <img src={orochimaruFace} alt="Orochimaru" className="sw-start-avatar" />
-                <div className="sw-start-avatar-glow"></div>
-              </div>
+              {/* Left Column: Hero & Core Action */}
+              <div className="sw-start-col-left">
+                {/* Circular Avatar */}
+                <div className="sw-start-avatar-wrap">
+                  <img src={orochimaruFace} alt="Orochimaru" className="sw-start-avatar" />
+                  <div className="sw-start-avatar-glow"></div>
+                </div>
 
-              {/* Title & Subtitle */}
-              <h1 className="sw-start-title">SERPENT FURY</h1>
-              <p className="sw-start-subtitle">UNLEASH THE IMMORTAL</p>
+                {/* Title & Subtitle */}
+                <h1 className="sw-start-title">SERPENT FURY</h1>
+                <p className="sw-start-subtitle">UNLEASH THE IMMORTAL</p>
 
-              {/* Pill Box */}
-              <div className="sw-start-pill-box">
-                <div className="sw-start-pill-header">
+                {/* Sleek Pill Badge */}
+                <div className="sw-start-pill-badge">
                   <span>🐍 Powered by </span>
-                  <a href="https://orochimaru.live" target="_blank" rel="noopener noreferrer" className="sw-start-pill-link">
+                  <a href="https://orochimaru.live" target="_blank" rel="noopener noreferrer" className="sw-start-pill-badge-link">
                     $orochimaru.live
                   </a>
                 </div>
-                <p className="sw-start-pill-desc">The Immortal Serpent of DeFi — Shedding Limits, Gaining Power</p>
+
+                {/* Enter Arena Button */}
+                <button onClick={startGame} className="sw-start-arena-btn" style={{ marginTop: '10px' }}>
+                  <span>⚔️ ENTER THE ARENA</span>
+                </button>
+
+                {/* High Score */}
+                <div className="sw-start-highscore" style={{ marginTop: '5px' }}>
+                  🏆 High Score: {swHighScore.toLocaleString()}
+                </div>
+
+                {/* Instructions text */}
+                <p className="sw-start-instructions" style={{ marginTop: '5px' }}>
+                  WASD/Arrows to move | 1 2 3 4 or Space to attack<br />
+                  Survive 7 waves + defeat the <strong>BOSS</strong> to claim victory
+                </p>
               </div>
 
-              {/* Enter Arena Button */}
-              <button onClick={startGame} className="sw-start-arena-btn">
-                <span>⚔️ ENTER THE ARENA</span>
-              </button>
+              {/* Right Column: Dashboard (Streak, Challenge, Leaderboard) */}
+              <div className="sw-start-col-right">
+                {/* Dashboard Stats (Streak + Challenge) */}
+                <div className="sw-dashboard-stats-card">
+                  {store.survivalStreak > 0 && (
+                    <div className="sw-streak-indicator-row">
+                      <span className="streak-fire">🔥 RUN STREAK:</span>
+                      <span className="streak-val">{store.survivalStreak} / 3 Runs</span>
+                    </div>
+                  )}
 
-              {/* Instructions text */}
-              <p className="sw-start-instructions">
-                WASD/Arrows to move | 1 2 3 4 or Space to attack<br />
-                Survive 7 waves + defeat the <strong>BOSS</strong> to claim victory
-              </p>
+                  <div className="sw-weekly-challenge-box">
+                    <div className="challenge-header">🏆 WEEKLY CHALLENGE</div>
+                    <div className="challenge-title">{WEEKLY_CHALLENGE.title}</div>
+                    <div className="challenge-desc">{WEEKLY_CHALLENGE.description}</div>
+                    <div className="challenge-points">+{WEEKLY_CHALLENGE.bonusPts} PTS bonus · Expires {WEEKLY_CHALLENGE.expiresAt}</div>
+                  </div>
+                </div>
 
-              {/* High Score */}
-              <div className="sw-start-highscore">
-                🏆 High Score: {swHighScore.toLocaleString()}
-              </div>
-
-              {/* Global Leaderboard Mini Table */}
-              <div className="sw-start-leaderboard">
-                <h3 className="sw-start-leaderboard-title">🏆 GLOBAL LEADERBOARD</h3>
-                <table className="sw-start-leaderboard-table">
-                  <thead>
-                    <tr>
-                      <th>#</th>
-                      <th>PLAYER</th>
-                      <th>SCORE</th>
-                      <th>WAVE</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {topScores.length === 0 ? (
+                {/* Global Leaderboard Mini Table */}
+                <div className="sw-start-leaderboard">
+                  <h3 className="sw-start-leaderboard-title">🏆 GLOBAL LEADERBOARD</h3>
+                  <table className="sw-start-leaderboard-table">
+                    <thead>
                       <tr>
-                        <td colSpan={4} className="text-muted text-center" style={{ padding: '20px 0', textAlign: 'center' }}>
-                          No rankings recorded yet.
-                        </td>
+                        <th>#</th>
+                        <th>PLAYER</th>
+                        <th>SCORE</th>
+                        <th>WAVE</th>
                       </tr>
-                    ) : (
-                      topScores.map((entry, idx) => (
-                        <tr key={idx}>
-                          <td>{idx + 1}</td>
-                          <td>{entry.name}</td>
-                          <td>{entry.score.toLocaleString()}</td>
-                          <td>{entry.waves}</td>
+                    </thead>
+                    <tbody>
+                      {topScores.length === 0 ? (
+                        <tr>
+                          <td colSpan={4} className="text-muted text-center" style={{ padding: '15px 0', textAlign: 'center' }}>
+                            No rankings recorded yet.
+                          </td>
                         </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
+                      ) : (
+                        topScores.map((entry, idx) => (
+                          <tr key={idx}>
+                            <td>{idx + 1}</td>
+                            <td>{entry.name}</td>
+                            <td>{entry.score.toLocaleString()}</td>
+                            <td>{entry.waves}</td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           </div>
@@ -596,6 +633,17 @@ export function SerpentsWrathWebView({ onExit, onGoToLeaderboard }: SerpentsWrat
               <div style={{ background: 'rgba(0,0,0,0.7)', border: '2px solid #ff0044', height: '14px', width: '100%' }}>
                 <div ref={bossHpBarRef} style={{ background: 'linear-gradient(90deg, #8b0000, #ff0044)', height: '100%', width: '100%', transition: 'width 0.1s linear' }}></div>
               </div>
+            </div>
+
+            {/* Summon Bar */}
+            <div style={{ position: 'absolute', bottom: '70px', left: '50%', transform: 'translateX(-50%)', width: '260px', zIndex: 20, textAlign: 'center' }}>
+              <div style={{ fontSize: '9px', color: '#a855f7', fontFamily: 'var(--font-heading)', letterSpacing: '2px', marginBottom: '3px', textShadow: '0 0 6px #a855f7' }}>
+                ⚡ REANIMATION SUMMON
+              </div>
+              <div style={{ background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(168,85,247,0.4)', height: '8px', borderRadius: '4px', overflow: 'hidden' }}>
+                <div ref={summonBarRef} style={{ height: '100%', width: '0%', transition: 'width 0.3s ease', borderRadius: '4px' }} />
+              </div>
+              <div style={{ fontSize: '8px', color: 'rgba(168,85,247,0.6)', marginTop: '2px' }}>Fill by getting kills — 5 to summon</div>
             </div>
 
             {/* Pause Overlay */}
@@ -855,42 +903,6 @@ export function SerpentsWrathWebView({ onExit, onGoToLeaderboard }: SerpentsWrat
 
       </div>
 
-      {showGiftModal && (
-        <div className="gift-modal-overlay">
-          <div className="gift-modal-card animate-scale-in">
-            <div className="gift-icon-glow">🎁</div>
-            <h2 className="gift-title">SHINOBI GIFT UNLOCKED!</h2>
-            <p className="gift-desc">
-              Congratulations, Genin! You successfully survived the first raid wave.
-            </p>
-            <div className="gift-reward-box">
-              <span className="gift-reward-label">YOUR REWARD</span>
-              <strong className="gift-reward-value">+250 PTS</strong>
-            </div>
-            <div className="gift-promo-banner">
-              <div className="promo-text-highlight">🏆 LIMITED TIME QUEST:</div>
-              <p className="promo-details">
-                First person to gather all <strong>5 Forbidden NFTs</strong> gets a <strong>$100 Cash reward!</strong>
-              </p>
-              <p className="promo-encourage">
-                Keep playing to win more PTS, reanimate stronger legends, and claim your glory!
-              </p>
-            </div>
-            <button 
-              onClick={() => {
-                store.addTokens(250);
-                if (engineRef.current) {
-                  engineRef.current.resume();
-                }
-                setShowGiftModal(false);
-              }}
-              className="gift-claim-btn"
-            >
-              CLAIM PTS & CONTINUE BATTLE
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Lock, 
   Play,
@@ -20,6 +20,7 @@ import orochimaruFace from '../assets/orochimaru_face.png';
 import forbiddenLabIcon from '../assets/forbidden_lab_icon.jpg';
 import ryuchiCaveIcon from '../assets/ryuchi_cave_icon.jpg';
 import { PlatformPickerModal } from './PlatformPickerModal';
+import { supabase } from '../lib/supabaseClient';
 
 interface HubViewProps {
   orochimaruTokens: number;
@@ -73,7 +74,45 @@ export function HubView({
   const [copied, setCopied] = useState(false);
   const [isPlatformModalOpen, setIsPlatformModalOpen] = useState(false);
   const [activeWatchVideoUrl, setActiveWatchVideoUrl] = useState<string | null>(null);
+  const [uniquePlays, setUniquePlays] = useState<number | null>(null);
   const contractAddress = "0x89fabE8405CFDE3f6aEeD8804e3BA4a10b7e21d3";
+
+  useEffect(() => {
+    async function trackAndFetchPlays() {
+      try {
+        let visitorId = localStorage.getItem('orochimaru_visitor_id');
+        if (!visitorId) {
+          visitorId = typeof window !== 'undefined' && window.crypto?.randomUUID
+            ? window.crypto.randomUUID()
+            : Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+          localStorage.setItem('orochimaru_visitor_id', visitorId);
+        }
+
+        // Record the current visit
+        const { error: upsertError } = await supabase
+          .from('page_visits')
+          .upsert({ visitor_id: visitorId, last_seen: new Date().toISOString() }, { onConflict: 'visitor_id' });
+
+        if (upsertError) {
+          console.warn('Error recording page visit:', upsertError);
+        }
+
+        // Retrieve the unique visitor count
+        const { count, error: countError } = await supabase
+          .from('page_visits')
+          .select('*', { count: 'exact', head: true });
+
+        if (countError) {
+          console.warn('Error fetching unique visits:', countError);
+        } else if (count !== null) {
+          setUniquePlays(count);
+        }
+      } catch (err) {
+        console.warn('Failed to track unique plays:', err);
+      }
+    }
+    trackAndFetchPlays();
+  }, []);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(contractAddress);
@@ -177,6 +216,12 @@ export function HubView({
             <h1 className="hero-title-main">OROCHIMARU</h1>
             <h1 className="hero-title-sub">SHINOBI PORTAL</h1>
             <p className="hero-tagline">Shed your limits, reanimate legends, and rule the leaderboard.</p>
+            {uniquePlays !== null && (
+              <div className="hero-unique-visits">
+                <span className="hero-unique-visits-dot"></span>
+                <span>{uniquePlays.toLocaleString()} SHINOBI PORTAL VISITS</span>
+              </div>
+            )}
           </div>
           <div className="hero-avatar-container">
             <img 

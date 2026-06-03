@@ -90,31 +90,8 @@ export function LeaderboardView({ onExit, localPlayerPts }: LeaderboardViewProps
           setEntries(mapped);
           localStorage.setItem('orochimaru_leaderboard', JSON.stringify(mapped));
         } else {
-          // Populate default mock data if database is empty
-          const mockData: LeaderboardEntry[] = [
-            { id: '1', name: 'Kabuto_Yakushi', score: 75000, kills: 142, waves: 6, platform: 'web', timestamp: Date.now() - 3600000 * 2, email: 'kabuto@orochimaru.org', walletAddress: '0x71C229712aB297a7e8e50bB41A284E29037c89E1', country: 'JP', shinobiPts: 1340 },
-            { id: '2', name: 'Kimimaro_K', score: 62000, kills: 118, waves: 5, platform: 'mobile', timestamp: Date.now() - 3600000 * 5, email: 'kimimaro@kaguya.net', walletAddress: '0x3aC9e28e8e89E197a7e8e50bB41A284E29037c89e5', country: 'CN', shinobiPts: 870 },
-            { id: '3', name: 'Sasuke_Uchiha', score: 58000, kills: 105, waves: 5, platform: 'web', timestamp: Date.now() - 3600000 * 12, email: 'sasuke@uchiha.com', walletAddress: '0x8bD15A412aB297a7e8e50bB41A284E29037c89E1', country: 'JP', shinobiPts: 620 },
-            { id: '4', name: 'Tayuya_Flute', score: 32000, kills: 64, waves: 3, platform: 'mobile', timestamp: Date.now() - 3600000 * 24, email: 'tayuya@sound4.org', walletAddress: '0xF6b46Cd12aB297a7e8e50bB41A284E29037c89E1', country: 'DE', shinobiPts: 200 },
-            { id: '5', name: 'Sakon_Ukon', score: 28000, kills: 58, waves: 3, platform: 'web', timestamp: Date.now() - 3600000 * 48, email: 'sakon@sound4.org', walletAddress: '0x9e2079512aB297a7e8e50bB41A284E29037c89E1', country: 'IT', shinobiPts: 185 }
-          ];
-
-          // Asynchronously attempt to seed database so it is ready
-          for (const item of mockData) {
-            await supabase.from('leaderboard').insert({
-              name: item.name,
-              score: item.score,
-              kills: item.kills,
-              waves: item.waves,
-              platform: item.platform,
-              email: item.email || '',
-              wallet_address: item.walletAddress || '',
-              country: item.country || 'US'
-            });
-          }
-
-          setEntries(mockData);
-          localStorage.setItem('orochimaru_leaderboard', JSON.stringify(mockData));
+          setEntries([]);
+          localStorage.setItem('orochimaru_leaderboard', JSON.stringify([]));
         }
       } catch (err) {
         console.warn('Failed to load from Supabase, loading localStorage cache:', err);

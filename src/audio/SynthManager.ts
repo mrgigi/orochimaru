@@ -217,6 +217,126 @@ class SynthManager {
     }
     this.ambientGain = null;
   }
+
+  private chakraOsc: OscillatorNode | null = null;
+  private chakraGain: GainNode | null = null;
+
+  // Continuous hum that builds in pitch
+  setChakraHum(ratio: number) {
+    if (this.isMuted) return;
+    this.initCtx();
+    if (!this.ctx) return;
+
+    if (!this.chakraOsc) {
+      this.chakraOsc = this.ctx.createOscillator();
+      this.chakraGain = this.ctx.createGain();
+      this.chakraOsc.type = 'sine';
+      this.chakraOsc.connect(this.chakraGain);
+      this.chakraGain.connect(this.ctx.destination);
+      this.chakraGain.gain.setValueAtTime(0, this.ctx.currentTime);
+      this.chakraOsc.start();
+    }
+
+    if (ratio >= 1.0 || ratio <= 0.0) {
+      this.chakraGain!.gain.setTargetAtTime(0, this.ctx.currentTime, 0.1);
+    } else {
+      const freq = 60 + (ratio * 120);
+      this.chakraOsc.frequency.setTargetAtTime(freq, this.ctx.currentTime, 0.1);
+      this.chakraGain!.gain.setTargetAtTime(0.08, this.ctx.currentTime, 0.1);
+    }
+  }
+
+  playParrySuccess() {
+    if (this.isMuted) return;
+    this.initCtx();
+    if (!this.ctx) return;
+
+    // Sharp metallic ring
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(1200, this.ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(800, this.ctx.currentTime + 0.3);
+    
+    gain.gain.setValueAtTime(0.5, this.ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.3);
+    
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+    
+    osc.start();
+    osc.stop(this.ctx.currentTime + 0.35);
+  }
+
+  playSummon() {
+    if (this.isMuted) return;
+    this.initCtx();
+    if (!this.ctx) return;
+
+    // Dramatic sting
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(200, this.ctx.currentTime);
+    osc.frequency.linearRampToValueAtTime(50, this.ctx.currentTime + 0.8);
+    
+    gain.gain.setValueAtTime(0.4, this.ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.8);
+    
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+    
+    osc.start();
+    osc.stop(this.ctx.currentTime + 0.85);
+  }
+
+  playEnrage() {
+    if (this.isMuted) return;
+    this.initCtx();
+    if (!this.ctx) return;
+
+    // Urgent alarm
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(440, this.ctx.currentTime);
+    osc.frequency.linearRampToValueAtTime(880, this.ctx.currentTime + 0.5);
+    
+    gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.5);
+    
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+    
+    osc.start();
+    osc.stop(this.ctx.currentTime + 0.6);
+  }
+
+  playWaveIntro() {
+    if (this.isMuted) return;
+    this.initCtx();
+    if (!this.ctx) return;
+
+    // Dramatic hit
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(100, this.ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(20, this.ctx.currentTime + 1.5);
+    
+    gain.gain.setValueAtTime(0.6, this.ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 1.5);
+    
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+    
+    osc.start();
+    osc.stop(this.ctx.currentTime + 1.6);
+  }
 }
 
 export const synth = new SynthManager();

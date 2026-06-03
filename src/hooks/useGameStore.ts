@@ -35,6 +35,7 @@ export interface GameState {
   // Daily PTS cap tracking
   dailyPtsEarned: number;
   dailyPtsDate: string; // ISO date string (YYYY-MM-DD UTC)
+  survivalStreak: number;
 }
 
 const DAILY_PTS_CAP = 200;
@@ -42,6 +43,17 @@ const DAILY_PTS_CAP = 200;
 function getTodayUTC(): string {
   return new Date().toISOString().slice(0, 10); // 'YYYY-MM-DD'
 }
+
+// ── Weekly Challenge Config ────────────────────────────────────────────────
+// Hardcoded for now; shape is Supabase-ready (just add a fetch from DB later).
+export const WEEKLY_CHALLENGE = {
+  id: 'week_001',
+  title: '🐍 Snake Only',
+  description: 'Clear Wave 5 using only Snake Strike (no other jutsu)',
+  condition: 'snakeStrikeOnly_wave5',
+  bonusPts: 50,
+  expiresAt: '2026-06-03',
+};
 
 const DEFAULT_UPGRADES: Record<string, Upgrade> = {
   ryuchiCaveScroll: {
@@ -158,6 +170,7 @@ export function useGameStore() {
             hashirama: { ...DEFAULT_REANIMATIONS.hashirama, ...(parsed.reanimations?.hashirama ?? {}), ptsThreshold: 2000 }
           },
           unlockedItems: parsed.unlockedItems ?? [],
+          survivalStreak: parsed.survivalStreak ?? 0,
           dailyPtsEarned,
           dailyPtsDate: today
         };
@@ -174,6 +187,7 @@ export function useGameStore() {
       upgrades: DEFAULT_UPGRADES,
       reanimations: DEFAULT_REANIMATIONS,
       unlockedItems: [],
+      survivalStreak: 0,
       dailyPtsEarned: 0,
       dailyPtsDate: getTodayUTC()
     };
@@ -360,6 +374,52 @@ export function useGameStore() {
     return false;
   };
 
+  const recordRun = (waveReached: number): number => {
+    let bonusAwarded = 0;
+    setState(prev => {
+      let newStreak = prev.survivalStreak ?? 0;
+      let newTokens = prev.orochimaruTokens;
+      let newTotal = prev.totalTokensClaimed;
+      let newDaily = prev.dailyPtsEarned;
+      let dailyDate = prev.dailyPtsDate;
+      const today = getTodayUTC();
+      
+      if (waveReached <= 1) {
+        newStreak = 0;
+      } else {
+        newStreak += 1;
+        if (newStreak >= 3) {
+          bonusAwarded = 25;
+          newStreak = 0;
+          
+          // Apply tokens via daily cap
+          const currentDailyEarned = dailyDate === today ? newDaily : 0;
+          const remainingToday = Math.max(DAILY_PTS_CAP - currentDailyEarned, 0);
+          const cappedAmount = Math.min(bonusAwarded, remainingToday);
+          if (cappedAmount > 0) {
+            newTokens += cappedAmount;
+            newTotal += cappedAmount;
+            newDaily = currentDailyEarned + cappedAmount;
+            dailyDate = today;
+            bonusAwarded = cappedAmount; // Return actual awarded
+          } else {
+            bonusAwarded = 0;
+          }
+        }
+      }
+      
+      return {
+        ...prev,
+        survivalStreak: newStreak,
+        orochimaruTokens: newTokens,
+        totalTokensClaimed: newTotal,
+        dailyPtsEarned: newDaily,
+        dailyPtsDate: dailyDate
+      };
+    });
+    return bonusAwarded;
+  };
+
   // Toggle Mute state
   const toggleMute = () => {
     setState(prev => ({
@@ -381,6 +441,7 @@ export function useGameStore() {
         upgrades: DEFAULT_UPGRADES,
         reanimations: DEFAULT_REANIMATIONS,
         unlockedItems: [],
+        survivalStreak: 0,
         dailyPtsEarned: 0,
         dailyPtsDate: today
       });
@@ -430,6 +491,7 @@ export function useGameStore() {
     orochimaruTokens: state.orochimaruTokens,
     totalTokensClaimed: state.totalTokensClaimed,
     combatHighScore: state.combatHighScore,
+    survivalStreak: state.survivalStreak ?? 0,
     muteAudio: state.muteAudio,
     upgrades: state.upgrades,
     reanimations: state.reanimations,
@@ -443,6 +505,7 @@ export function useGameStore() {
     convertCellsToTokens,
     addTokens,
     updateCombatHighScore,
+    recordRun,
     toggleMute,
     resetGame,
     clickPower: getClickPower(),
